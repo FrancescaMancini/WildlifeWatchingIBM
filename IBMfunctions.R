@@ -30,4 +30,11 @@ p_encounter <- function(p_e, effect) {
 }   
 
 
+# Calculate new maximum time allowed with animals
+
+time_with_animals <- function(maxx, effect) {
+  maxx <- maxx * (1.01 - effect)                          #updates threshold of effect with increase in abundance
+  wide <- 0.00025 / (maxx / 100000)
+  curve <- c(maxx, wide)                              #updates shape of the curve with increase in abundance
+}
 
