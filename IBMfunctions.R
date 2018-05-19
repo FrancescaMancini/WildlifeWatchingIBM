@@ -1,7 +1,9 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 
+# Date modified: 2018-05-19
+
+# Wildlife functions ####
 
 # Calculate the effect that tourism had on the population.
 
@@ -16,7 +18,7 @@
 # maxx is the maximum amout of time operators can spend with animals before seeing an effect.
 
 tourism_effect <- function(wide, withanimals, maxx) {
-  0.1 + (0 - 0.1) / (1 + exp(wide * (sum(withanimals) - (maxx + maxx / 5))))
+  0.1 + ((- 0.1) / (1 + exp(wide * (sum(withanimals) - (maxx + maxx / 5)))))
 }
 
 # Calculate the probability of encounter due to effect on population
@@ -25,7 +27,7 @@ tourism_effect <- function(wide, withanimals, maxx) {
 # (here: by affecting the probability of encounter)   
 
 p_encounter <- function(p_e, effect) {
-  p_e * (1.01 - effect)
+  p_e <- p_e * (1.01 - effect)
   p_e <- ifelse(p_e > 1, 1, p_e)        # probability cannot be > 1
 }   
 
@@ -37,4 +39,112 @@ time_with_animals <- function(maxx, effect) {
   wide <- 0.00025 / (maxx / 100000)
   curve <- c(maxx, wide)                              #updates shape of the curve with increase in abundance
 }
+
+# testing wildlife functions
+# 
+# withanimals <- seq(0, 300000, 1000)
+# 
+# maxx <- rep(NA, length(withanimals))
+# maxx[1] <- 100000
+# 
+# wide <- rep(NA, length(withanimals))
+# wide[1] <- 0.00025 / (maxx[1] / 100000)
+# 
+# p_e <- rep(NA, length(withanimals))
+# p_e[1] <- 0.8
+# 
+# effect <- rep(NA, length(withanimals))
+# 
+# for(i in 1:seq_along(withanimals)){
+#   effect[i] <- tourism_effect(wide[i], withanimals[i], maxx[i])
+#   if(i < length(withanimals)){
+#   p_e[i + 1] <- p_encounter(p_e[i], effect[i])
+#   curve <- time_with_animals(maxx[i], effect[i])
+#   maxx[i + 1] <- curve[1]
+#   wide[i + 1] <- curve[2]
+#   }
+# }
+# 
+# max_fixed <- 100000
+# wide_fixed <- 0.00025
+# 
+# for(i in 1:seq_along(withanimals)){
+#   effect[i] <- tourism_effect(wide_fixed, withanimals[i], max_fixed)
+# }
+# 
+# for(i in 1:seq_along(withanimals)){
+#   if(i < length(withanimals)){
+#   p_e[i + 1] <- p_encounter(p_e[i], effect[i])
+#   }
+# }
+# 
+# for(i in 1:seq_along(withanimals)){
+#   if(i < length(withanimals)){
+#     curve <- time_with_animals(maxx[i], effect[i])
+#     maxx[i + 1] <- curve[1]
+#     wide[i + 1] <- curve[2]
+#   }
+# }
+
+
+
+# Tourists functions ####
+
+# Booking tours
+
+booking <- function(tourists, tour_ops){                  # the booking function has 2 arguments, a dataset for tourists and one for tour operators
+for(i in seq_len(nrow(tourists))) {                       # loop trhough each tourist
+  tourist <- tourists[i, ]
+  inbudget <- subset(tour_ops, tour_ops$price <= tourist$price_max)           # extract the subset of tours that are within the budget of the tourist
+  preferred <- inbudget[which.max(inbudget$rating), "id"]                     # extract the preferred tour (higher rating)
+  if(length(preferred) != 0 &&                                                # if there is a preferred tour and
+     tour_ops[preferred, "rating"] > tourist["rating_min"] &&         # if the rating of this tour is higher than the the tourist's minimum rating and
+     tour_ops[preferred, "capacity"] > tour_ops[preferred, "bookings"]) {     # if the tour operator is not fully booked
+    tour_ops[preferred, "bookings"] <- tour_ops[preferred, "bookings"] + 1    # add a booking to the preferred tour operator
+    tourists[i, "going"] <- "Yes"                                             # the tourist is going on the tour
+  } else {inbudget <- subset(inbudget, inbudget$id != preferred)              # otherwise delete the preferred tour from the inbudget vector and
+  while(nrow(inbudget) != 0 &&                                                # for as long as there are tours in the inbudget vector and
+        length(inbudget$rating[inbudget$rating > tourist$rating_min]) > 0) {  # there are tours with higher rating than the tourist's minimum
+    preferred <- as.numeric(inbudget[which.max(inbudget$rating), "id"])       # select the second preferred tour and
+    if (length(preferred) != 0 &&                                             # if all conditions are met
+        tour_ops[preferred, "rating"] > tourist["rating_min"] &&
+        tour_ops[preferred, "capacity"] > tour_ops[preferred, "bookings"]) {
+      tour_ops[preferred, "bookings"] <- tour_ops[preferred, "bookings"] + 1  # add a booking to the tour and
+      tourists[i, "going"] <- "Yes"                                           # the tourist is going on the tour
+      break
+    } else {
+      inbudget <- subset(inbudget, inbudget$id != preferred)                  # otherwise try the third preferred tour and then the fourth etc...
+    }
+  }
+  if(tourists[which(tourists$id == tourist$id), "going"] == "") {             # if the tourist has not found a tour 
+    tourists[which(tourists$id == tourist$id), "going"] <- "No"               # the tourist is not going on any tour and
+    tourists[which(tourists$id == tourist$id), "waiting"] <- tourists[tourist$id, "waiting"] + 1      # add 1 day to the tourists's waiting time
+  }
+  }
+}
+  invisible(list(tourists,tour_ops))                                          # return the two dataframes in a list
+}
+
+
+# Testing
+
+# create dataframes to hold preferences for tourists and caracteristics for tour operators
+
+# tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
+#                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
+# 
+# tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
+#                        rating_min = rnorm(1000, 3, 0.5), going = character(length = 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
+# 
+
+# run the function 
+
+# bookings <- booking(tourists, tour_ops)
+
+# extract dataframes from list
+# tourists <- bookings[[1]]
+# tour_ops <- bookings[[2]]
+
+
+# Satisfaction
 
