@@ -86,7 +86,15 @@ time_with_animals <- function(maxx, effect) {
 #   }
 # }
 
-
+tourists_max <- function(tmax, timeout, tour_ops){
+  t_pertour <- tmax/365/dim(tour_ops)[1]                        # calculate n of time allowed with animals per tour
+  t_mean <- mean(withanimals, na.rm = T)                        # calculate average time spent with animals per tour in the previous year
+  if(t_pertour >= t_mean) {                                     # if time allowed is more or equal the mean
+    (sum(tour_ops$capacity)*365) * dim(tour_ops)[1]}            # max tourists is equal to maximum capacity
+  else{prop_mean <- (t_mean - t_pertour)/timeout                # othewise calculate the proportion of a trip that needs to be reduced
+       n_tours <- (365 - (prop_mean * 365)) * dim(tour_ops)[1]  # transform this proportion into number of tours that can be run
+       n_tours * (sum(tour_ops$capacity))}                      # multiply the number of tours by tour operators' capacity to obtain maximum tourists
+}
 
 # Tourists functions ####
 
