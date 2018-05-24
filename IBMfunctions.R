@@ -1,7 +1,7 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-05-19
+# Date modified: 2018-05-24
 
 # Wildlife functions ####
 
@@ -90,6 +90,14 @@ time_with_animals <- function(maxx, effect) {
 
 # Tourists functions ####
 
+# From a 2010 survey the number of tourists passing through the Moray Firth dolphin watching locations 
+# are 35500 in Peak season and 27500 in off-peak season
+# Jan     Feb     Mar     Apr     May     June      July      Aug     Sept      Oct     Nov     Dec
+# 315     315    1260    5030    7680     9640      11620    14240    7145     4830     610     315
+# Percentage of these that go on a boat tour
+# 16%     16%     16%     16%     16%     19%       19%       19%     16%        16%     16%     16%
+
+
 # Booking tours
 
 booking <- function(tourists, tour_ops){                  # the booking function has 2 arguments, a dataset for tourists and one for tour operators
@@ -130,12 +138,12 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 
 # create dataframes to hold preferences for tourists and caracteristics for tour operators
 
-# tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
-#                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
+tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
+                      capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
 # 
-# tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
-#                        rating_min = rnorm(1000, 3, 0.5), going = character(length = 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
-# 
+tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
+                       rating_min = rnorm(1000, 3, 0.5), going = character(length = 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
+
 
 # run the function 
 
@@ -147,4 +155,56 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 
 
 # Satisfaction
+
+satisfaction_animals <- function(withanimals, timeout, slope) {
+  1 + (0.01 - 1) / (1 + exp(slope * ((withanimals / timeout) - 0.3)))}
+
+# testing
+
+# withanimals <- seq(10, 180, 10)
+# timeout <- 180
+# 
+# satisfaction <- satisfaction_animals(withanimals, timeout, 15)
+# 
+# plot(satisfaction~withanimals)
+
+
+satisfaction_price <- function(price, rating, slope, infl) {
+  1 / (1 + exp(-slope * (1 / (price / rating) - infl)))
+}
+  
+# testing
+# price <- 10
+# rating <- seq(1, 5, 0.1)
+# 
+# satisfaction <- satisfaction_price(price, rating, slope = 10, infl = 0.3)
+# plot(satisfaction~rating)
+
+satisfaction_waiting <- function(waiting, slope, infl) {
+  1 / (1 + exp(slope * ((waiting / 365) - infl)))
+}
+
+# testing
+
+# waiting <- seq(1, 365, 1)
+# satisfaction <- satisfaction_waiting(waiting, 10,0.3)
+# plot(satisfaction~waiting)
+
+
+satisfaction_infr_investment <- function(infr_investment, slope, infl){
+ 1 / (1 + exp(-slope * ((infr_investment / profit) - infl)))
+}
+
+# testing
+
+# investment <- seq(0, 10000, 100)
+# profit <- 10000
+# satisfaction <- satisfaction_infr_investment(investment, 10, 0.1)
+# prop_investment <- investment/profit
+# plot(satisfaction ~ prop_investment)
+
+
+satisfaction_other_investment <- function(investment_other, slope, infl){
+ 1 / (1 + exp(-slope * ((investment_other / profit) - infl)))
+}
 
