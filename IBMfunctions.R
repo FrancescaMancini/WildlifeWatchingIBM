@@ -1,7 +1,7 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-05-24
+# Date modified: 2018-05-25
 
 # Wildlife functions ####
 
@@ -215,4 +215,13 @@ satisfaction_infr_investment <- function(infr_investment, slope, infl){
 satisfaction_other_investment <- function(investment_other, slope, infl){
  1 / (1 + exp(-slope * ((investment_other / profit) - infl)))
 }
+
+
+# Tour operators ####
+
+# price_change  
+# deltaP = ((deltaQ/Q)/PE) * P
+
+price_change <- function(extra_cost, ntours){
+  extra_cost / ntours}
 
