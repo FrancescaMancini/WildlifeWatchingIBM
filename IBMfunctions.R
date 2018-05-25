@@ -146,11 +146,11 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 
 # create dataframes to hold preferences for tourists and caracteristics for tour operators
 
-tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
-                      capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
-# 
-tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
-                       rating_min = rnorm(1000, 3, 0.5), going = character(length = 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
+# tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
+#                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
+#  
+# tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
+#                        rating_min = rnorm(1000, 3, 0.5), going = character(length = 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
 
 
 # run the function 
@@ -164,7 +164,16 @@ tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
 
 # Satisfaction
 
-satisfaction_animals <- function(withanimals, timeout, slope) {
+# tourist satisfaction is affected by different caracteristics: 
+# time spent with the animals, price/quality ratio, waiting time for booking,
+# investment in infrastructure and other services
+
+# satisfaction is calculated as a sigmoid curve
+
+# the proportion of tour time spent with animals determines tourist satisfaction
+# with an inflectioon point of 0.3 and a variable slope. 
+
+satisfaction_animals <- function(withanimals, timeout, slope) {   
   1 + (0.01 - 1) / (1 + exp(slope * ((withanimals / timeout) - 0.3)))}
 
 # testing
@@ -176,6 +185,8 @@ satisfaction_animals <- function(withanimals, timeout, slope) {
 # 
 # plot(satisfaction~withanimals)
 
+# satisfaction regarding price/quality ratio is also expressed as 
+# a sigmoid relationship.
 
 satisfaction_price <- function(price, rating, slope, infl) {
   1 / (1 + exp(-slope * (1 / (price / rating) - infl)))
@@ -188,6 +199,10 @@ satisfaction_price <- function(price, rating, slope, infl) {
 # satisfaction <- satisfaction_price(price, rating, slope = 10, infl = 0.3)
 # plot(satisfaction~rating)
 
+
+# the proportion of the year a tourist had to wait before being able
+# to book a tour determines their satisfaction in a similar way
+
 satisfaction_waiting <- function(waiting, slope, infl) {
   1 / (1 + exp(slope * ((waiting / 365) - infl)))
 }
@@ -198,6 +213,9 @@ satisfaction_waiting <- function(waiting, slope, infl) {
 # satisfaction <- satisfaction_waiting(waiting, 10,0.3)
 # plot(satisfaction~waiting)
 
+
+# the proportion of tour operator's profits that is reinvested into 
+# infrastructure (here) or other services (below) influences tourist satisfaction
 
 satisfaction_infr_investment <- function(infr_investment, slope, infl){
  1 / (1 + exp(-slope * ((infr_investment / profit) - infl)))
@@ -218,6 +236,10 @@ satisfaction_other_investment <- function(investment_other, slope, infl){
 
 
 # Tour operators ####
+
+# Tour operators can modify the price of their tours on a yearly basis.
+# the change in the price of the ticket is dependent only on any
+# extra investment the tour operator decided to make at the end of the previous year
 
 # price_change  
 # deltaP = ((deltaQ/Q)/PE) * P
