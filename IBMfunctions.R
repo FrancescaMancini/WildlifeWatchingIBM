@@ -247,3 +247,120 @@ satisfaction_other_investment <- function(investment_other, slope, infl){
 price_change <- function(extra_cost, ntours){
   extra_cost / ntours}
 
+
+# encounters
+
+# the time that tour operators can spend in encounters is given by:
+# the number of animals encountered (a series of binomial draws with
+# probability calculated each year by p_encounter()) multiplied by the 
+# maximum time per encounter suggested by the code of conduct
+
+encounter_time <- function(p_e, code = 10, max = 7) {
+ sum(code * rbinom(max, 1, p_e))}
+
+# if encounter time is > the maximum allowed then the tour operators
+# need to make the choice whether to defect or cooperate
+# stay within the maximum time allowed or use all the time available
+
+# payoffs
+
+# the choice whether to cooperate or defect depends on the tour ops 
+# behavioural phenotype and on the payoff matrix
+# the payoffs are calculated for each behavioural strategy: 
+# cooperate whent he others cooperate
+# cooperate when the others defect
+# defect when the others cooperate
+# and defet when the others defect
+
+library(dplyr)
+
+# when defecting while the others cooperate, the tour ops have a 
+# competitive advantage. the defecting operator will have higher 
+# rating than the cooperating ones thus attracting more tourists, 
+# but also attracting those lost by the cooperating competitors
+# this advantage is calculated as the difference between the tourists attracted by 
+# a defecting cooperator and those attracted by a cooperating operator multiplied by the ticket price
+
+competitive_adv <- function(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops){
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))) - 
+   ticket * sum(rbinom(capacity, 1, satisfaction_animals(maxx/365/n_tourops, timeout, slope))) 
+}
+
+
+# the payoff for the strategy of cooperating when the others cooperate is given by:
+# the number of tourists attracted by spending the maximum time allowed with animals
+# multiplied by the ticket price
+
+CC <- function(ticket, capacity, maxx, timeout, slope, n_tourops){
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(maxx/365/n_tourops, timeout, slope)))}
+
+
+# the payoff for the strategy of defecting when the others cooperate is given by:
+# the number of tourists attracted by spending all the time with animals
+# multiplied by the ticket price
+# plus the competitive advantage
+# minus the possible fine for defecting 
+
+DC <- function(ticket, capacity, t_encounter, maxx, timeout, slope, p_detection, fine, n_tourops) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))) +
+  competitive_adv(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops) - (rbinom(1, 1, p_detection) * fine)}
+
+
+# the payoff for the strategy of cooperating when the others defect is given by:
+# the number of tourists attracted by spending the maximum time allowed with animals
+# multiplied by the ticket price
+# minus the competitive disadvantage
+
+CD <- function(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(maxx/365/n_tourops, timeout, slope))) - 
+    competitive_adv(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops)}
+
+# the payoff for the strategy of defecting when the others defect is given by:
+# the number of tourists attracted by spending all the time with animals
+# multiplied by the ticket price
+# minus the possible fine for defecting 
+
+DD <- function(ticket, capacity, t_encounter, timeout, slope, p_detection, fine) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))) - 
+  (rbinom(1, 1, p_detection) * fine)}
+
+
+# calculation of payoffs for management scenario 3 is similar
+# but it does not include fines
+
+CC.3 <- function(ticket, capacity, maxx, timeout, slope, n_tourops) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(maxx/365/n_tourops, timeout, slope)))}
+
+DC.3 <- function(ticket, capacity, t_encounter, maxx, timeout, slope, n_tourops) {
+  ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope)) + 
+    competitive_adv(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops)}
+
+CD.3 <- function(ticket, capacity, t_encounter, maxx, timeout, slope, n_tourops) {
+  ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = maxx/365/n_tourops, timeout, slope)) - 
+    competitive_adv(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops)}
+
+DD.3 <- function(ticket, capacity, t_encounter, timeout, slope) {
+  ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))} 
+
+
+# this function determines the behavioural choice for each tour operators
+# according to the payoffs just calculated and their behavioural phenotype
+
+behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_DD){
+  tour_ops %>% 
+    mutate(., behaviour = with(., case_when(
+      phenotype == "trustful" ~ "cooperate",
+      phenotype == "optimist" & payoff_DC < payoff_CC ~ "cooperate",
+      phenotype == "pessimist" & payoff_CD > payoff_DD ~ "cooperate",
+      phenotype == "envious" & payoff_CD - payoff_DC >= 0 ~ "cooperate",
+      TRUE ~ "defect")))
+}
+
+# testing
+# phenotypes <- c("trustful", "optimist", "pessimist", "envious")
+# 
+# tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
+#                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), 
+#                       phenotype = sample(phenotypes, 10, replace = T), behaviour = rep(NA, 10))
+# 
+# tour_ops <- behaviour_choice(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_DD)
