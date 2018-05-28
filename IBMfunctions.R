@@ -117,7 +117,7 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
      tour_ops[preferred, "rating"] > tourist["rating_min"] &&         # if the rating of this tour is higher than the the tourist's minimum rating and
      tour_ops[preferred, "capacity"] > tour_ops[preferred, "bookings"]) {     # if the tour operator is not fully booked
     tour_ops[preferred, "bookings"] <- tour_ops[preferred, "bookings"] + 1    # add a booking to the preferred tour operator
-    tourists[i, "going"] <- "Yes"                                             # the tourist is going on the tour
+    tourists[i, "going"] <- tour_ops[preferred, "id"]                         # the tourist is going on the tour
   } else {inbudget <- subset(inbudget, inbudget$id != preferred)              # otherwise delete the preferred tour from the inbudget vector and
   while(nrow(inbudget) != 0 &&                                                # for as long as there are tours in the inbudget vector and
         length(inbudget$rating[inbudget$rating > tourist$rating_min]) > 0) {  # there are tours with higher rating than the tourist's minimum
@@ -126,14 +126,13 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
         tour_ops[preferred, "rating"] > tourist["rating_min"] &&
         tour_ops[preferred, "capacity"] > tour_ops[preferred, "bookings"]) {
       tour_ops[preferred, "bookings"] <- tour_ops[preferred, "bookings"] + 1  # add a booking to the tour and
-      tourists[i, "going"] <- "Yes"                                           # the tourist is going on the tour
+      tourists[i, "going"] <- tour_ops[preferred, "id"]                       # the tourist is going on the tour
       break
     } else {
       inbudget <- subset(inbudget, inbudget$id != preferred)                  # otherwise try the third preferred tour and then the fourth etc...
     }
   }
-  if(tourists[which(tourists$id == tourist$id), "going"] == "") {             # if the tourist has not found a tour 
-    tourists[which(tourists$id == tourist$id), "going"] <- "No"               # the tourist is not going on any tour and
+  if(is.na(tourists[which(tourists$id == tourist$id), "going"]) == TRUE) {    # if the tourist has not found a tour 
     tourists[which(tourists$id == tourist$id), "waiting"] <- tourists[tourist$id, "waiting"] + 1      # add 1 day to the tourists's waiting time
   }
   }
@@ -150,7 +149,7 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 #                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
 #  
 # tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
-#                        rating_min = rnorm(1000, 3, 0.5), going = character(length = 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
+#                        rating_min = rnorm(1000, 3, 0.5), going = rep(NA, 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
 
 
 # run the function 
