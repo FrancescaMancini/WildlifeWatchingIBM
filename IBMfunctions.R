@@ -178,8 +178,8 @@ satisfaction_animals <- function(withanimals, timeout, slope) {
 
 # testing
 
-# withanimals <- seq(10, 180, 10)
-# timeout <- 180
+# withanimals <- seq(10, 90, 1)
+# timeout <- 90
 # 
 # satisfaction <- satisfaction_animals(withanimals, timeout, 15)
 # 
@@ -194,9 +194,23 @@ satisfaction_price <- function(price, rating, slope, infl) {
   
 # testing
 # price <- 10
-# rating <- seq(1, 5, 0.1)
+# rating <- seq(0, 5, 0.1)
 # 
-# satisfaction <- satisfaction_price(price, rating, slope = 10, infl = 0.3)
+# satisfaction <- satisfaction_price(price, rating, slope = 15, infl = 0.3)
+# plot(satisfaction~rating)
+
+
+# different shape of the function for price/rating satisfaction
+# this time it is a linear relationship
+
+satisfaction_price_lin <- function(price, rating, slope){
+  slope * 1/(price/rating)
+}
+
+# testing
+# price <- 15
+# rating <- seq(0, 5, 0.1)
+# satisfaction <- satisfaction_price_lin(price, rating, slope = 3)
 # plot(satisfaction~rating)
 
 
@@ -207,11 +221,22 @@ satisfaction_waiting <- function(waiting, slope, infl) {
   1 / (1 + exp(slope * ((waiting / 365) - infl)))
 }
 
+
 # testing
 
 # waiting <- seq(1, 365, 1)
-# satisfaction <- satisfaction_waiting(waiting, 10,0.3)
+# satisfaction <- satisfaction_waiting(waiting, 10,0.4)
 # plot(satisfaction~waiting)
+
+
+
+satisfaction_waiting_lin <- function(waiting, slope){
+ 1 + slope * (waiting/365)
+}
+
+# waiting <- seq(1, 365, 1)
+# satisfaction <- satisfaction_waiting_lin(waiting, -1)
+# plot(satisfaction~waiting)                                     # not sure a linear relationship makes sense
 
 
 # the proportion of tour operator's profits that is reinvested into 
@@ -230,8 +255,23 @@ satisfaction_infr_investment <- function(infr_investment, slope, infl){
 # plot(satisfaction ~ prop_investment)
 
 
+satisfaction_infr_investment_lin <- function(infr_investment, slope){
+ slope * (infr_investment / profit)
+}
+
+# investment <- seq(0, 10000, 100)
+# profit <- 10000
+# satisfaction <- satisfaction_infr_investment_lin(investment, 1)
+# prop_investment <- investment/profit
+# plot(satisfaction ~ prop_investment)
+
+
 satisfaction_other_investment <- function(investment_other, slope, infl){
  1 / (1 + exp(-slope * ((investment_other / profit) - infl)))
+}
+
+satisfaction_other_investment_lin <- function(investment_other, slope){
+ slope * (investment_other / profit)
 }
 
 
