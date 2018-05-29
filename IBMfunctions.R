@@ -145,11 +145,15 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 
 # create dataframes to hold preferences for tourists and caracteristics for tour operators
 
-# tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
-#                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10))
-#  
-# tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
-#                        rating_min = rnorm(1000, 3, 0.5), going = rep(NA, 1000), waiting = rep(0, 1000), stringsAsFactors=FALSE)
+tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
+                      capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), 
+                      investment_infra = rep(NA, 10), investment_ot = rep(NA, 10), 
+                      time_with = rnorm(10, 20, 10), profit = rep(NA, 10))
+
+tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
+                       rating_min = rnorm(1000, 3, 0.5), going = rep(NA, 1000), 
+                       waiting = rep(0, 1000), satisfaction = rep(NA, 1000), 
+                       satis_wait = rep(NA, 1000), stringsAsFactors=FALSE)
 
 
 # run the function 
@@ -241,7 +245,7 @@ satisfaction_waiting_lin <- function(waiting, slope){
 # the proportion of tour operator's profits that is reinvested into 
 # infrastructure (here) or other services (below) influences tourist satisfaction
 
-satisfaction_infr_investment <- function(infr_investment, slope, infl){
+satisfaction_infr_investment <- function(infr_investment, profit, slope, infl){
  1 / (1 + exp(-slope * ((infr_investment / profit) - infl)))
 }
 
@@ -254,7 +258,7 @@ satisfaction_infr_investment <- function(infr_investment, slope, infl){
 # plot(satisfaction ~ prop_investment)
 
 
-satisfaction_infr_investment_lin <- function(infr_investment, slope){
+satisfaction_infr_investment_lin <- function(infr_investment, profit, slope){
  slope * (infr_investment / profit)
 }
 
@@ -265,14 +269,36 @@ satisfaction_infr_investment_lin <- function(infr_investment, slope){
 # plot(satisfaction ~ prop_investment)
 
 
-satisfaction_other_investment <- function(investment_other, slope, infl){
+satisfaction_other_investment <- function(investment_other, profit, slope, infl){
  1 / (1 + exp(-slope * ((investment_other / profit) - infl)))
 }
 
-satisfaction_other_investment_lin <- function(investment_other, slope){
+satisfaction_other_investment_lin <- function(investment_other, profit, slope){
  slope * (investment_other / profit)
 }
 
+
+# overall satisfaction
+
+tourists <- tourists %>%
+  group_by(going) %>%
+  mutate(satis_animals = ifelse(is.na(going), as.integer(NA), 
+                                satisfaction_animals(tour_ops[which(tour_ops$id == unique(going)), "time_with"], 90, 15)),
+         satis_price = ifelse(is.na(going), as.integer(NA), 
+                              satisfaction_price(tour_ops[which(tour_ops$id == unique(going)), "price"], 
+                                                 tour_ops[which(tour_ops$id == unique(going)), "rating"], 15, 0.3)),
+         satis_wait = ifelse(is.na(going), as.integer(NA), satisfaction_waiting(waiting, 10, 0.4)),
+         satis_infr = ifelse(is.na(going), as.integer(NA), 
+                             satisfaction_infr_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_infra"], 
+                                                          tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1)),
+         satis_other = ifelse(is.na(going), as.integer(NA), 
+                              satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot "],
+                                                            tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1))) %>%
+  rowwise() %>%
+  mutate(satisfaction = ifelse(is.na(going), as.integer(NA),
+                               sum(satis_animals, satis_price, satis_wait, satis_infr, satis_other, na.rm = TRUE))) %>%
+  ungroup()
+  
 
 # Tour operators ####
 
@@ -381,6 +407,7 @@ CD.3 <- function(ticket, capacity, t_encounter, maxx, timeout, slope, n_tourops)
 DD.3 <- function(ticket, capacity, t_encounter, timeout, slope) {
   ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))} 
 
+# behavioural strategy
 
 # this function determines the behavioural choice for each tour operators
 # according to the payoffs just calculated and their behavioural phenotype
@@ -403,3 +430,13 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
 #                       phenotype = sample(phenotypes, 10, replace = T), behaviour = rep(NA, 10))
 # 
 # tour_ops <- behaviour_choice(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_DD)
+
+
+# profit
+
+tour_ops <- tour_ops %>%
+  mutate(profit = ifelse(bookings == 0, 0, (bookings * price) - (0.7 * 90)))
+
+# rating
+
+#overall_rating <- mean(c(mean(subset(tourists, going == tour_ops$id, satisfaction)), tour_ops$rating))
