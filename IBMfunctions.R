@@ -423,6 +423,7 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
       phenotype == "optimist" & payoff_DC < payoff_CC ~ "cooperate",
       phenotype == "pessimist" & payoff_CD > payoff_DD ~ "cooperate",
       phenotype == "envious" & payoff_CD - payoff_DC >= 0 ~ "cooperate",
+      phenotype == "undefined" ~ sample(c("defect", "cooperate"), 1, prob = c(0.5, 0.5)),
       TRUE ~ "defect")))
 }
 
