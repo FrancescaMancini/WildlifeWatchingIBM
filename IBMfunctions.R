@@ -325,7 +325,7 @@ price_change <- function(extra_cost, ntours){
 # probability calculated each year by p_encounter()) multiplied by the 
 # maximum time per encounter suggested by the code of conduct
 
-encounter_time <- function(p_e, code = 10, max = 7) {
+encounter_time <- function(p_e, code = 10, max = 5) {
  sum(code * rbinom(max, 1, p_e))}
 
 # if encounter time is > the maximum allowed then the tour operators
