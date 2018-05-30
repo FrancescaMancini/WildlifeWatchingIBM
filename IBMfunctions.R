@@ -1,7 +1,9 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-05-25
+# Date modified: 2018-05-30
+
+library(dplyr)
 
 # Wildlife functions ####
 
@@ -147,12 +149,14 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 
 tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), 
-                      investment_infra = rep(NA, 10), investment_ot = rep(NA, 10), 
-                      time_with = rnorm(10, 20, 10), profit = rep(NA, 10))
+                      investment_infra = runif(10, 0, 50), investment_ot = runif(10, 0, 50), 
+                      time_with = rnorm(10, 20, 10), profit = rep(0, 10), profit_year = rep(0, 10))
 
 tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
                        rating_min = rnorm(1000, 3, 0.5), going = rep(NA, 1000), 
                        waiting = rep(0, 1000), satisfaction = rep(NA, 1000), 
+                       satis_animals = rep(NA, 1000), satis_price = rep(NA, 1000), 
+                       satis_infr = rep(NA, 1000), satis_invest = rep(NA, 1000),
                        satis_wait = rep(NA, 1000), stringsAsFactors=FALSE)
 
 
@@ -291,13 +295,14 @@ tourists <- tourists %>%
          satis_infr = ifelse(is.na(going), as.integer(NA), 
                              satisfaction_infr_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_infra"], 
                                                           tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1)),
-         satis_other = ifelse(is.na(going), as.integer(NA), 
-                              satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot "],
+         satis_invest = ifelse(is.na(going), as.integer(NA), 
+                              satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot"],
                                                             tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1))) %>%
+  ungroup() %>%
   rowwise() %>%
   mutate(satisfaction = ifelse(is.na(going), as.integer(NA),
-                               sum(satis_animals, satis_price, satis_wait, satis_infr, satis_other, na.rm = TRUE))) %>%
-  ungroup()
+                               sum(satis_animals, satis_price, satis_wait, satis_infr, satis_invest, na.rm = TRUE))) 
+  
   
 
 # Tour operators ####
@@ -337,7 +342,6 @@ encounter_time <- function(p_e, code = 10, max = 7) {
 # defect when the others cooperate
 # and defet when the others defect
 
-library(dplyr)
 
 # when defecting while the others cooperate, the tour ops have a 
 # competitive advantage. the defecting operator will have higher 
@@ -434,9 +438,18 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
 
 # profit
 
+# calculate daily and annual profit
+
 tour_ops <- tour_ops %>%
-  mutate(profit = ifelse(bookings == 0, 0, (bookings * price) - (0.7 * 90)))
+  mutate(profit = ifelse(bookings == 0, 0, (bookings * price) - (0.7 * 90)),
+         profit_year = profit_year + profit)
+
 
 # rating
 
-#overall_rating <- mean(c(mean(subset(tourists, going == tour_ops$id, satisfaction)), tour_ops$rating))
+# update rating according to tourists satisfaction
+
+tour_ops <- tour_ops %>%
+  group_by(id) %>%
+  mutate(rating = ifelse(bookings ==0, rating, mean(c(colMeans(tourists[which(tourists$going == id), "satisfaction"], na.rm = T), rating), na.rm = T))) %>%
+  ungroup()
