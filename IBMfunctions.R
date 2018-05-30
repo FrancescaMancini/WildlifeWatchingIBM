@@ -19,8 +19,8 @@ library(dplyr)
 # Parameter withanimals is the time tour operators spend with animals.
 # maxx is the maximum amout of time operators can spend with animals before seeing an effect.
 
-tourism_effect <- function(wide, withanimals, maxx) {
-  0.1 + ((- 0.1) / (1 + exp(wide * (sum(withanimals) - (maxx + maxx / 5)))))
+tourism_effect <- function(slope, withanimals, maxx) {
+  0.1 + ((- 0.1) / (1 + exp(slope * (sum(withanimals) - (maxx + maxx / 5)))))
 }
 
 # Calculate the probability of encounter due to effect on population
