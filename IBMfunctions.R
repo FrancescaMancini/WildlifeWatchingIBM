@@ -453,3 +453,11 @@ tour_ops <- tour_ops %>%
   group_by(id) %>%
   mutate(rating = ifelse(bookings ==0, rating, mean(c(colMeans(tourists[which(tourists$going == id), "satisfaction"], na.rm = T), rating), na.rm = T))) %>%
   ungroup()
+
+
+# Management #####
+
+# fine defectors
+
+fines <- function(p, detection, penalty){
+  rbinom(1, p_detection) * penalty}
