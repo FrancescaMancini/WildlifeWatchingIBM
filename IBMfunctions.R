@@ -106,7 +106,7 @@ tourists_max <- function(tmax, timeout, tour_ops){
 # 315     315    1260    5030    7680     9640      11620    14240    7145     4830     610     315
 # Percentage of these that go on a boat tour
 # 16%     16%     16%     16%     16%     19%       19%       19%     16%        16%     16%     16%
-
+# 50      50      200     800     1230    1830      2210      2700    1140      773      97      50
 
 # Booking tours
 
