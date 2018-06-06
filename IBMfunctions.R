@@ -303,7 +303,37 @@ tourists <- tourists %>%
   mutate(satisfaction = ifelse(is.na(going), as.integer(NA),
                                sum(satis_animals, satis_price, satis_wait, satis_infr, satis_invest, na.rm = TRUE))) 
   
-  
+
+
+# generate daily time series of tourists
+
+days <- 365             # number of days in a year
+days_tot <- years* 365  # number of days in total
+
+#effect sizes
+trend <- 0.005          # trends in demand
+eff.season <- 80        # seasonal fluctuation
+const <- 120            # intercept 
+# sampling noise
+sampling.sd <-10
+
+# creates a vector holding the day of the year for all of the days
+season <- rep(1:days, length = days_tot)
+# creates a vector holding the days
+day <- 1:days_tot
+
+# calculate the number of tourists as a linear function of the annual trend
+# and a sinusoidal function of the day of year
+# plus some noise
+
+alt.season <- ((season * 2/days)-0.5)*pi
+n_tourists <- round(rnorm(days_tot, mean = const + days_tot *trend +  eff.season*sin (alt.season), sd = sampling.sd )) 
+
+plot(n_tourists~day, type = "n")
+lines(n_tourists~day, col = "black")
+
+
+
 
 # Tour operators ####
 
