@@ -195,23 +195,23 @@ satisfaction_animals <- function(withanimals, timeout, slope) {
 # satisfaction regarding price/quality ratio is also expressed as 
 # a sigmoid relationship.
 
-satisfaction_price <- function(price, rating, slope, infl) {
-  1 / (1 + exp(-slope * (1 / (price / rating) - infl)))
+satisfaction_price <- function(price, max_price, rating, max_rating, slope, infl) {
+   1 + (0.5 - 1) / (1 + exp(-slope * (((price/max_price) / (rating/max_rating)) - infl)))
 }
   
 # testing
-# price <- 10
-# rating <- seq(0, 5, 0.1)
+# rating <- rep(5, 41)
+# price <- seq(10, 30, 0.5)
 # 
-# satisfaction <- satisfaction_price(price, rating, slope = 15, infl = 0.3)
-# plot(satisfaction~rating)
+# satisfaction <- satisfaction_price(price, max(price), rating, max(rating), slope = 15, infl = 0.7)
+# plot(satisfaction~c(((price/max(price)) / (rating/max(rating)))))
 
 
 # different shape of the function for price/rating satisfaction
 # this time it is a linear relationship
 
-satisfaction_price_lin <- function(price, rating, slope){
-  slope * 1/(price/rating)
+satisfaction_price_lin <- function(price, max_price, rating, max_rating, slope){
+  slope * ((price/max_price) / (rating/max_rating))
 }
 
 # testing
@@ -225,14 +225,14 @@ satisfaction_price_lin <- function(price, rating, slope){
 # to book a tour determines their satisfaction in a similar way
 
 satisfaction_waiting <- function(waiting, slope, infl) {
-  1 / (1 + exp(slope * ((waiting / 365) - infl)))
+  1 + (0.01 - 1) / (1 + exp(slope * ((waiting / 365) - infl)))
 }
 
 
 # testing
 
 # waiting <- seq(1, 365, 1)
-# satisfaction <- satisfaction_waiting(waiting, 10,0.4)
+# satisfaction <- satisfaction_waiting(waiting, -60,0.1)
 # plot(satisfaction~waiting)
 
 
@@ -249,21 +249,20 @@ satisfaction_waiting_lin <- function(waiting, slope){
 # the proportion of tour operator's profits that is reinvested into 
 # infrastructure (here) or other services (below) influences tourist satisfaction
 
-satisfaction_infr_investment <- function(infr_investment, profit, slope, infl){
- 1 / (1 + exp(-slope * ((infr_investment / profit) - infl)))
+satisfaction_infr_investment <- function(infr_investment, max_infr_investment, slope, infl){
+ 1 + (0.01 - 1) / (1 + exp(slope * ((infr_investment / max_infr_investment) - infl)))
 }
 
 # testing
 
 # investment <- seq(0, 10000, 100)
-# profit <- 10000
-# satisfaction <- satisfaction_infr_investment(investment, 10, 0.1)
-# prop_investment <- investment/profit
+# satisfaction <- satisfaction_infr_investment(investment, max(investment), 10, 0.3)
+# prop_investment <- investment/max(investment)
 # plot(satisfaction ~ prop_investment)
 
 
-satisfaction_infr_investment_lin <- function(infr_investment, profit, slope){
- slope * (infr_investment / profit)
+satisfaction_infr_investment_lin <- function(infr_investment, max_infr_investment, slope){
+ slope * (infr_investment / max_infr_investment)
 }
 
 # investment <- seq(0, 10000, 100)
@@ -273,12 +272,12 @@ satisfaction_infr_investment_lin <- function(infr_investment, profit, slope){
 # plot(satisfaction ~ prop_investment)
 
 
-satisfaction_other_investment <- function(investment_other, profit, slope, infl){
- 1 / (1 + exp(-slope * ((investment_other / profit) - infl)))
+satisfaction_other_investment <- function(investment_other, max_investment_other, slope, infl){
+ 1 + (0.01 - 1) / (1 + exp(slope * ((investment_other / max_investment_other) - infl)))
 }
 
-satisfaction_other_investment_lin <- function(investment_other, profit, slope){
- slope * (investment_other / profit)
+satisfaction_other_investment_lin <- function(investment_other, max_investment_other, slope){
+ slope * (investment_other / max_investment_other)
 }
 
 
