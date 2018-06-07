@@ -1,7 +1,7 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-05-30
+# Date modified: 2018-06-07
 
 library(dplyr)
 
@@ -147,18 +147,18 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
 
 # create dataframes to hold preferences for tourists and caracteristics for tour operators
 
-tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
-                      capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), 
-                      investment_infra = runif(10, 0, 50), investment_ot = runif(10, 0, 50), 
-                      time_with = rnorm(10, 20, 10), profit = rep(0, 10), profit_year = rep(0, 10))
-
-tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
-                       rating_min = rnorm(1000, 3, 0.5), going = rep(NA, 1000), 
-                       waiting = rep(0, 1000), satisfaction = rep(NA, 1000), 
-                       satis_animals = rep(NA, 1000), satis_price = rep(NA, 1000), 
-                       satis_infr = rep(NA, 1000), satis_invest = rep(NA, 1000),
-                       satis_wait = rep(NA, 1000), stringsAsFactors=FALSE)
-
+# tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 15, 5), rating = rnorm(10, 3, 1.5),
+#                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), 
+#                       investment_infra = runif(10, 0, 50), investment_ot = runif(10, 0, 50), 
+#                       time_with = rnorm(10, 20, 10), profit = rep(0, 10), profit_year = rep(0, 10))
+# 
+# tourists <- data.frame(id = seq(1, 1000, 1), price_max = rnorm(1000, 15, 5),
+#                        rating_min = rnorm(1000, 3, 0.5), going = rep(NA, 1000), 
+#                        waiting = rep(0, 1000), satisfaction = rep(NA, 1000), 
+#                        satis_animals = rep(NA, 1000), satis_price = rep(NA, 1000), 
+#                        satis_infr = rep(NA, 1000), satis_invest = rep(NA, 1000),
+#                        satis_wait = rep(NA, 1000), stringsAsFactors=FALSE)
+# 
 
 # run the function 
 
@@ -284,53 +284,53 @@ satisfaction_other_investment_lin <- function(investment_other, profit, slope){
 
 # overall satisfaction
 
-tourists <- tourists %>%
-  group_by(going) %>%
-  mutate(satis_animals = ifelse(is.na(going), as.integer(NA), 
-                                satisfaction_animals(tour_ops[which(tour_ops$id == unique(going)), "time_with"], 90, 15)),
-         satis_price = ifelse(is.na(going), as.integer(NA), 
-                              satisfaction_price(tour_ops[which(tour_ops$id == unique(going)), "price"], 
-                                                 tour_ops[which(tour_ops$id == unique(going)), "rating"], 15, 0.3)),
-         satis_wait = ifelse(is.na(going), as.integer(NA), satisfaction_waiting(waiting, 10, 0.4)),
-         satis_infr = ifelse(is.na(going), as.integer(NA), 
-                             satisfaction_infr_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_infra"], 
-                                                          tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1)),
-         satis_invest = ifelse(is.na(going), as.integer(NA), 
-                              satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot"],
-                                                            tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1))) %>%
-  ungroup() %>%
-  rowwise() %>%
-  mutate(satisfaction = ifelse(is.na(going), as.integer(NA),
-                               sum(satis_animals, satis_price, satis_wait, satis_infr, satis_invest, na.rm = TRUE))) 
-  
+# tourists <- tourists %>%
+#   group_by(going) %>%
+#   mutate(satis_animals = ifelse(is.na(going), as.integer(NA), 
+#                                 satisfaction_animals(tour_ops[which(tour_ops$id == unique(going)), "time_with"], 90, 15)),
+#          satis_price = ifelse(is.na(going), as.integer(NA), 
+#                               satisfaction_price(tour_ops[which(tour_ops$id == unique(going)), "price"], 
+#                                                  tour_ops[which(tour_ops$id == unique(going)), "rating"], 15, 0.3)),
+#          satis_wait = ifelse(is.na(going), as.integer(NA), satisfaction_waiting(waiting, 10, 0.4)),
+#          satis_infr = ifelse(is.na(going), as.integer(NA), 
+#                              satisfaction_infr_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_infra"], 
+#                                                           tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1)),
+#          satis_invest = ifelse(is.na(going), as.integer(NA), 
+#                               satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot"],
+#                                                             tour_ops[which(tour_ops$id == unique(going)), "profit"], 10, 0.1))) %>%
+#   ungroup() %>%
+#   rowwise() %>%
+#   mutate(satisfaction = ifelse(is.na(going), as.integer(NA),
+#                                sum(satis_animals, satis_price, satis_wait, satis_infr, satis_invest, na.rm = TRUE))) 
+#   
 
 
 # generate daily time series of tourists
 
-days <- 365             # number of days in a year
-days_tot <- years* 365  # number of days in total
-
-#effect sizes
-trend <- 0.005          # trends in demand
-eff.season <- 80        # seasonal fluctuation
-const <- 120            # intercept 
-# sampling noise
-sampling.sd <-10
-
-# creates a vector holding the day of the year for all of the days
-season <- rep(1:days, length = days_tot)
-# creates a vector holding the days
-day <- 1:days_tot
-
-# calculate the number of tourists as a linear function of the annual trend
-# and a sinusoidal function of the day of year
-# plus some noise
-
-alt.season <- ((season * 2/days)-0.5)*pi
-n_tourists <- round(rnorm(days_tot, mean = const + days_tot *trend +  eff.season*sin (alt.season), sd = sampling.sd )) 
-
-plot(n_tourists~day, type = "n")
-lines(n_tourists~day, col = "black")
+# days <- 365             # number of days in a year
+# days_tot <- years* 365  # number of days in total
+# 
+# #effect sizes
+# trend <- 0.005          # trends in demand
+# eff.season <- 80        # seasonal fluctuation
+# const <- 120            # intercept 
+# # sampling noise
+# sampling.sd <-10
+# 
+# # creates a vector holding the day of the year for all of the days
+# season <- rep(1:days, length = days_tot)
+# # creates a vector holding the days
+# day <- 1:days_tot
+# 
+# # calculate the number of tourists as a linear function of the annual trend
+# # and a sinusoidal function of the day of year
+# # plus some noise
+# 
+# alt.season <- ((season * 2/days)-0.5)*pi
+# n_tourists <- round(rnorm(days_tot, mean = const + days_tot *trend +  eff.season*sin (alt.season), sd = sampling.sd )) 
+# 
+# plot(n_tourists~day, type = "n")
+# lines(n_tourists~day, col = "black")
 
 
 
@@ -471,19 +471,19 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
 
 # calculate daily and annual profit
 
-tour_ops <- tour_ops %>%
-  mutate(profit = ifelse(bookings == 0, 0, (bookings * price) - (0.7 * 90)),
-         profit_year = profit_year + profit)
-
+# tour_ops <- tour_ops %>%
+#   mutate(profit = ifelse(bookings == 0, 0, (bookings * price) - (0.7 * 90)),
+#          profit_year = profit_year + profit)
+# 
 
 # rating
 
 # update rating according to tourists satisfaction
 
-tour_ops <- tour_ops %>%
-  group_by(id) %>%
-  mutate(rating = ifelse(bookings ==0, rating, mean(c(colMeans(tourists[which(tourists$going == id), "satisfaction"], na.rm = T), rating), na.rm = T))) %>%
-  ungroup()
+# tour_ops <- tour_ops %>%
+#   group_by(id) %>%
+#   mutate(rating = ifelse(bookings ==0, rating, mean(c(colMeans(tourists[which(tourists$going == id), "satisfaction"], na.rm = T), rating), na.rm = T))) %>%
+#   ungroup()
 
 
 # Management #####
