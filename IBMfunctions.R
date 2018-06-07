@@ -137,8 +137,8 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
     }
   }
   if(is.na(tourists[which(tourists$id == tourist$id), "going"]) == TRUE) {    # if the tourist has not found a tour 
-    tourists[which(tourists$id == tourist$id), "waiting"] <- tourists[tourist$id, "waiting"] + 1      # add 1 day to the tourists's waiting time
-    tourists[which(tourists$id == tourist$id), "sample_p"] <- 0.5 * tourists[tourist$id, "waiting"]
+    tourists[i, "waiting"] <- tourists[i, "waiting"] + 1      # add 1 day to the tourists's waiting time
+    tourists[i, "sample_p"] <- 0.5 * tourists[i, "waiting"]
   }
   }
 }
