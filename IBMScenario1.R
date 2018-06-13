@@ -92,9 +92,6 @@ profits <- vector("list", years)
 
 for(y in 1:years){                                  # start year loop
   
-# new operators start?
-#tour_ops <- 
-
 # create year tourists population
 tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = runif(1000000, 12, 25),
                        rating_min = runif(1000000, 2, 3.5), going = rep(NA, 1000000), 
@@ -198,6 +195,19 @@ profits[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), mone
 
 # set profits back to 0
 tour_ops$profit_year <- 0
+
+# new operators start?
+# probability of new operators wanting to start given by demand / supply ratio
+# probability is used in a binomial draw
+p_to <- sum(n_tourists[(1+ (y-1) * 365): (365+ (y-1) * 365)]) / (sum(tour_ops$capacity) * 365)
+new_tour_ops <- rbinom(1, 1, p = ifelse(p_to > 1, 1, p_to))
+
+# if inomial draw is one, one new TO starts in the next year
+if(new_tour_ops == 1) {tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$id) + 1, price = runif(1, 15, 25), rating = runif(1, 3, 5),
+                      capacity = as.integer(runif(1, 10, 30)), bookings = 0, investment_infra = 0.001, investment_ot = 0.001, 
+                      time_with = 0, time_with_year = 0, profit = 0, profit_year = 0,  phenotype = sample(phenotypes, 1, replace=TRUE, 
+                                         prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
+                      behaviour = character(1), tours = 365, stringsAsFactors = FALSE))}
 
 # keep track of simulation
 print(y)
