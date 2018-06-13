@@ -1,7 +1,7 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 
+# Date modified: 2018-06-13
 
 library(dplyr)
 source("IBMfunctions.R")
@@ -10,7 +10,7 @@ source("IBMfunctions.R")
 set.seed(123)
 
 # years months and days
-years <- 1
+years <- 2
 # months <- 12
 days <- 365
 
@@ -87,8 +87,13 @@ max_times[1] <- 10000
 
 slope_effect <- 15
 
+profits <- vector("list", years)
 
-#for(y in 1:years){                                  # start year loop
+
+for(y in 1:years){                                  # start year loop
+  
+# new operators start?
+#tour_ops <- 
 
 # create year tourists population
 tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = runif(1000000, 12, 25),
@@ -103,17 +108,17 @@ tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = runif(1000000, 1
 # and maximum time that can be sustainably be spent with animals
 # according to effect of tourism in the previous year
 
-max_times <- ifelse(y == 1, max_times[y], time_with_animals(maxx = max_times[y-1], effect = effects[y-1])) 
+max_times[y] <- ifelse(y == 1, max_times[y], time_with_animals(maxx = max_times[y-1], effect = effects[y-1])) 
 
-encounter_probs <- ifelse(y == 1, encounter_probs[y], p_encounter(p_e = encounter_probs[y-1], effect = effects[y-1]))
+encounter_probs[y] <- ifelse(y == 1, encounter_probs[y], p_encounter(p_e = encounter_probs[y-1], effect = effects[y-1]))
 
 # tour operators update prices according to costs
 
 tour_ops <- tour_ops %>%
-  mutate(price = case_when(y > 1 ~ price_change(extra_cost = investment_infra + investment_ot, ntours = tours), 
+  mutate(price = case_when(y > 1 ~ price + price_change(extra_cost = investment_infra + investment_ot, ntours = tours), 
                            TRUE ~ price))
 
-#for(d in 1:days){
+for(d in 1:days){
 
 day_of_sim <- d + (y - 1) * 365
 
@@ -180,7 +185,24 @@ tour_ops <- tour_ops %>%
 
 tourists_pop$waiting[match(tourists$id, tourists_pop$id)] <- tourists$waiting
 tourists_pop$sample_p[match(tourists$id, tourists_pop$id)] <- tourists$sample_p
-#}
+}
 
+# calculate tourism effect in the past year
 effects[y] <- tourism_effect(slope_effect, sum(tour_ops$time_with_year), max_times[y])
-#}
+
+# store tour operators annual profits in a list
+profits[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), money=tour_ops$profit_year)
+# remeber to use
+# profits <- do.call("rbind", profits)
+# to transform into data.frame
+
+# set profits back to 0
+tour_ops$profit_year <- 0
+
+# keep track of simulation
+print(y)
+}
+
+
+
+
