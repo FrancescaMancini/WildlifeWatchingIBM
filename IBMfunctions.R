@@ -1,7 +1,7 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-06-07
+# Date modified: 2018-06-13
 
 library(dplyr)
 
@@ -357,8 +357,10 @@ price_change <- function(extra_cost, ntours){
 # probability calculated each year by p_encounter()) multiplied by the 
 # maximum time per encounter suggested by the code of conduct
 
-encounter_time <- function(p_e, code = 10, max = 5) {
- sum(code * rbinom(max, 1, p_e))}
+library(RGeode)
+
+ encounter_time <- function(n_ops, p_e, code = 10, max = 5) {                     
+   replicate(n_ops,{sum(rbinom(max,rep(1,10),p_e) * rexptr(max,1/code,c(1,code)))})}
 
 # if encounter time is > the maximum allowed then the tour operators
 # need to make the choice whether to defect or cooperate
