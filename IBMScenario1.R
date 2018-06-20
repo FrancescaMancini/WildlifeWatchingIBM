@@ -10,7 +10,7 @@ source("IBMfunctions.R")
 set.seed(123)
 
 # years months and days
-years <- 2
+years <- 3
 # months <- 12
 days <- 365
 
@@ -83,11 +83,14 @@ encounter_probs[1] <- 0.6
 # tourists_allowed <- rep(NA, years)
 
 max_times <- rep(NA, years)
-max_times[1] <- 10000
+max_times[1] <- 100000
 
-slope_effect <- 15
+wide <- 0.00025 / (max_times[1] / 100000)
+
 
 profits <- vector("list", years)
+investments <- vector("list", years)
+
 
 
 for(y in 1:years){                                  # start year loop
@@ -156,16 +159,16 @@ tourists <- tourists %>%
                               satisfaction_price(tour_ops[which(tour_ops$id == unique(going)), "price"], max(tour_ops$price),
                                                  tour_ops[which(tour_ops$id == unique(going)), "rating"], max(tour_ops$rating), 15, 0.7)),
          satis_wait = ifelse(is.na(going), as.integer(NA), satisfaction_waiting(waiting, -60,0.1)),
-         satis_infr = ifelse(is.na(going), as.integer(NA), 
-                             satisfaction_infr_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_infra"], 
-                                                          max(tour_ops$investment_infra), 10, 0.3)),
+         # satis_infr = ifelse(is.na(going), as.integer(NA), 
+         #                     satisfaction_infr_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_infra"], 
+         #                                                  max(tour_ops$investment_infra), 10, 0.3)),
          satis_invest = ifelse(is.na(going), as.integer(NA), 
                               satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot"],
                                                             max(tour_ops$investment_ot), 10, 0.3))) %>%
   ungroup() %>%
   rowwise() %>%
   mutate(satisfaction = ifelse(is.na(going), as.integer(NA),
-                               sum(satis_animals, satis_price, satis_wait, satis_infr, satis_invest, na.rm = TRUE))) 
+                               sum(satis_animals, satis_price, satis_wait, satis_invest, na.rm = TRUE))) 
   
 
 # tour operators update rating accroding to tourist satisfaction and clean dataset
@@ -185,7 +188,21 @@ tourists_pop$sample_p[match(tourists$id, tourists_pop$id)] <- tourists$sample_p
 }
 
 # calculate tourism effect in the past year
-effects[y] <- tourism_effect(slope_effect, sum(tour_ops$time_with_year), max_times[y])
+wide <- 0.00025/(max_times[y]/100000)
+effects[y] <- tourism_effect(slope = wide, sum(tour_ops$time_with_year), max_times[y])
+
+# decide on infrastruucture investment
+
+tour_ops <- tour_ops %>%
+  mutate(investment_ot = invest_services(rating = rating, max_rating = max(rating), profit = profit_year),
+         investment_infra = invest_infrastructure(profit = profit_year, max_profit = capacity * price * 365, capacity = capacity, ticket = price)) %>%
+  mutate(investment_infra = ifelse((profit_year - 35000) - (investment_infra + investment_ot) > 0, investment_infra, 0),
+         capacity = ifelse(investment_infra > 0, capacity + as.integer((profit - 35000) / (capacity * price * 14)), capacity))
+
+# store tour operators investments in a list
+investments[[y]] <- data.frame(id = tour_ops$id, year=rep(y,length(tour_ops$id)), 
+                               infrastructure = tour_ops$investment_infra, 
+                               services = tour_ops$investment_ot)
 
 # store tour operators annual profits in a list
 profits[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), money=tour_ops$profit_year)
@@ -193,26 +210,31 @@ profits[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), mone
 # profits <- do.call("rbind", profits)
 # to transform into data.frame
 
-# set profits back to 0
-tour_ops$profit_year <- 0
 
-# new operators start?
+# operators who have had no profits for the past 3 years retire
+if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(profits[(y-3):y], subset, money == 0))$id) == 3)))
+           tour_ops <- subset(tour_ops, !(id %in% bankrupt))}
+
+# new operator start?
 # probability of new operators wanting to start given by demand / supply ratio
 # probability is used in a binomial draw
 p_to <- sum(n_tourists[(1+ (y-1) * 365): (365+ (y-1) * 365)]) / (sum(tour_ops$capacity) * 365)
 new_tour_ops <- rbinom(1, 1, p = ifelse(p_to > 1, 1, p_to))
 
-# if inomial draw is one, one new TO starts in the next year
+# if binomial draw is one, one new TO starts in the next year
 if(new_tour_ops == 1) {tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$id) + 1, price = runif(1, 15, 25), rating = runif(1, 3, 5),
                       capacity = as.integer(runif(1, 10, 30)), bookings = 0, investment_infra = 0.001, investment_ot = 0.001, 
                       time_with = 0, time_with_year = 0, profit = 0, profit_year = 0,  phenotype = sample(phenotypes, 1, replace=TRUE, 
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
                       behaviour = character(1), tours = 365, stringsAsFactors = FALSE))}
 
+
+# set profits and time with animals back to 0
+tour_ops$profit_year <- 0
+tour_ops$time_with_year <- 0
+
 # keep track of simulation
 print(y)
 }
-
-
 
 
