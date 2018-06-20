@@ -490,6 +490,58 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
 #   ungroup()
 
 
+# Investment decisions
+
+# Investment in services
+# The probability of investing in services is a logistic function of
+# the proportion of the operator's rating in relation to the maximum rating:
+# it is parameterised so that when the rating is up to 0.7 of the maximum 
+# (on a scale from 1 to 5, a rating of 3.5) the probability of investing is high
+# and it gets quickly smaller after reaching 3.75.
+# The decision to invest is then a binomial draw based on this probability.
+# The amount invested is a random proportion between 1 and 100 % of the available money
+# which is the profits for that year minus a subsistence amount (set to 35000).
+
+invest_services <- function(slope = 25, rating, max_rating, profit, infl = 0.75){
+  p_services <- 1 / (1 + exp(slope * ((rating/max_rating) - infl)))               
+  invest <- rbinom(1, 1, p_services)
+  ifelse(invest == 1 & profit - 35000 > 0, runif(1, 0.1, 1) * (profit - 35000), 0)
+}
+
+# testing
+
+# rat <- seq(1, 5, 0.1)
+# max_r <- 5
+# p_services <- invest_services(rating = rat, max_rating = max_r)
+# prop_rating <- rat/max_r
+# plot(p_services ~ prop_rating)
+
+# Investment in infrastructure
+# The probability of investing in infrastructure is a logistic function of
+# the proportion of the operator's profit in relation to their own maximum profits:
+# it is parameterised so that when the profit is up to 0.8 of the maximum 
+# (a profit of 80000 over a maximum of 100000) the probability of investing is low
+# and it gets quickly higher after reaching 85000.
+# The decision to invest is then a binomial draw based on this probability.
+# The amount invested is then given by the amount of money available 
+# (profit - subsistence) and the maximum number of extra tourists that the operator can afford.
+# The price per extra tourist is given by the equivalent of 2 weeks of work at full capacity.
+
+invest_infrastructure <- function(slope = 30, profit, max_profit, capacity, ticket,infl = 0.85){
+  p_infrastructure <- 1 / (1 + exp(-slope * ((profit/max_profit) - infl)))
+  invest <- rbinom(1, 1, p_infrastructure)
+  ifelse(invest == 1, as.integer((profit - 35000) / (capacity * ticket * 14)) * (capacity * ticket * 14), 0)
+}
+
+# testing
+
+# profits <- seq(0, 100000, 1000)
+# max_p <- 100000
+# p_infrastructure <- invest_infrastructure(slope = 30, profit = profits, max_profit = max_p, infl = 0.85)
+# prop_profit <- profits/max_p
+# plot(p_infrastructure ~ prop_profit)
+
+
 # Management #####
 
 # fine defectors
