@@ -18,10 +18,32 @@ library(dplyr)
 # corresponds to a wider range over which we observe a change.
 # Parameter withanimals is the time tour operators spend with animals.
 # maxx is the maximum amout of time operators can spend with animals before seeing an effect.
+# Effect on wildlife is also dependent on number of tourists:
+# similar sigmoid relationship, if capacity is the same effect is 0,
+# if industry doubles in size then effect is maximum 0.1
+# and this effect is additive.
 
-tourism_effect <- function(slope, withanimals, maxx) {
-  0.1 + ((- 0.1) / (1 + exp(slope * (sum(withanimals) - (maxx + maxx / 5)))))
+tourism_effect <- function(slope_time, slope_capacity, withanimals, init_capacity, new_capacity, maxx) {
+  0.1 + ((- 0.1) / (1 + exp(slope_time * (withanimals - (maxx + maxx / 5))))) +
+    0.1 + ((- 0.1) / (1 + exp(-slope_capacity * (init_capacity/new_capacity * 100 - 50))))
 }
+
+# testing
+# withanimals <- seq(80000, 150000, 1000)
+# slope_time <- 0.00025
+# slope_capacity <- 0.2
+# max_fixed <- 100000
+# init_capacity <- 100
+# new_capacity_exp <- 200
+# new_capacity <- 100
+# 
+# all_effects <- tourism_effect(slope_time, 0.2, withanimals, init_capacity, new_capacity, max_fixed)
+# all_effects_exp <- tourism_effect(slope_time, slope_capacity, withanimals, init_capacity, new_capacity_exp, max_fixed)
+# 
+# par(mfrow = c(2,1))
+# plot(all_effects ~ withanimals)
+# plot(all_effects_exp ~ withanimals)
+
 
 # Calculate the probability of encounter due to effect on population
 
@@ -38,8 +60,6 @@ p_encounter <- function(p_e, effect) {
 
 time_with_animals <- function(maxx, effect) {
   maxx <- maxx * (1.01 - effect)                          #updates threshold of effect with increase in abundance
-  wide <- 0.00025 / (maxx / 100000)
-  curve <- c(maxx, wide)                              #updates shape of the curve with increase in abundance
 }
 
 # testing wildlife functions
