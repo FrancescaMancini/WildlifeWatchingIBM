@@ -360,14 +360,12 @@ satisfaction_other_investment_lin <- function(investment_other, max_investment_o
 # Tour operators ####
 
 # Tour operators can modify the price of their tours on a yearly basis.
-# the change in the price of the ticket is dependent only on any
-# extra investment the tour operator decided to make at the end of the previous year
+# the change in the price of the ticket is dependent on
+# the ratio between demand and supply so that when demand 
+# is higher than supply price increases
 
-# price_change  
-# deltaP = ((deltaQ/Q)/PE) * P
-
-price_change <- function(extra_cost, ntours){
-  extra_cost / ntours}
+price_change <- function(ticket, demand, supply){
+  ticket * (demand / supply)}
 
 
 # encounters
