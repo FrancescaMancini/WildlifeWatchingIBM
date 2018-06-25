@@ -136,20 +136,20 @@ for(i in seq_len(nrow(tourists))) {                       # loop trhough each to
   inbudget <- subset(tour_ops, tour_ops$price <= tourist$price_max)           # extract the subset of tours that are within the budget of the tourist
   preferred <- inbudget[which.max(inbudget$rating), "id"]                     # extract the preferred tour (higher rating)
   if(length(preferred) != 0 &&                                                # if there is a preferred tour and
-     tour_ops[preferred, "rating"] > tourist["rating_min"] &&         # if the rating of this tour is higher than the the tourist's minimum rating and
-     tour_ops[preferred, "capacity"] > tour_ops[preferred, "bookings"]) {     # if the tour operator is not fully booked
-    tour_ops[preferred, "bookings"] <- tour_ops[preferred, "bookings"] + 1    # add a booking to the preferred tour operator
-    tourists[i, "going"] <- tour_ops[preferred, "id"]                         # the tourist is going on the tour
+     tour_ops[which(tour_ops$id == preferred), "rating"] > tourist["rating_min"] &&         # if the rating of this tour is higher than the the tourist's minimum rating and
+     tour_ops[which(tour_ops$id == preferred), "capacity"] > tour_ops[which(tour_ops$id == preferred), "bookings"]) {     # if the tour operator is not fully booked
+    tour_ops[which(tour_ops$id == preferred), "bookings"] <- tour_ops[which(tour_ops$id == preferred), "bookings"] + 1    # add a booking to the preferred tour operator
+    tourists[i, "going"] <- tour_ops[which(tour_ops$id == preferred), "id"]                         # the tourist is going on the tour
     tourists[i, "sample_p"] <- 0.01
   } else {inbudget <- subset(inbudget, inbudget$id != preferred)              # otherwise delete the preferred tour from the inbudget vector and
   while(nrow(inbudget) != 0 &&                                                # for as long as there are tours in the inbudget vector and
         length(inbudget$rating[inbudget$rating > tourist$rating_min]) > 0) {  # there are tours with higher rating than the tourist's minimum
     preferred <- as.numeric(inbudget[which.max(inbudget$rating), "id"])       # select the second preferred tour and
     if (length(preferred) != 0 &&                                             # if all conditions are met
-        tour_ops[preferred, "rating"] > tourist["rating_min"] &&
-        tour_ops[preferred, "capacity"] > tour_ops[preferred, "bookings"]) {
-      tour_ops[preferred, "bookings"] <- tour_ops[preferred, "bookings"] + 1  # add a booking to the tour and
-      tourists[i, "going"] <- tour_ops[preferred, "id"]                       # the tourist is going on the tour
+        tour_ops[which(tour_ops$id == preferred), "rating"] > tourist["rating_min"] &&
+        tour_ops[which(tour_ops$id == preferred), "capacity"] > tour_ops[which(tour_ops$id == preferred), "bookings"]) {
+      tour_ops[which(tour_ops$id == preferred), "bookings"] <- tour_ops[which(tour_ops$id == preferred), "bookings"] + 1  # add a booking to the tour and
+      tourists[i, "going"] <- tour_ops[which(tour_ops$id == preferred), "id"]                       # the tourist is going on the tour
       tourists[i, "sample_p"] <- 0.01
       break
     } else {
