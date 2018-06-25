@@ -1,7 +1,7 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 2018-06-22
+# Date modified: 2018-06-25
 
 library(dplyr)
 source("IBMfunctions.R")
@@ -31,7 +31,7 @@ p_envious <- 0.3
 p_undefined <- 0.12
 
 
-tour_ops <- data.frame(id = seq(1, 10, 1), price = runif(10, 15, 25), rating = runif(10, 3, 5),
+tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 30, 1), rating = rep(2.5, 10),
                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), bookings_year =  rep(0, 10),
                       investment_infra = rep(0.001, 10), investment_ot = rep(0.001, 10), 
                       time_with = rep(0, 10), time_with_year = rep(0, 10), 
@@ -98,7 +98,7 @@ withanimals <- vector("list", years)
 for(y in 1:years){                                  # start year loop
   
 # create year tourists population
-tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = runif(1000000, 12, 25),
+tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(60000, 30, 1), rnorm(30000, 45, 1), rnorm(10000, 60, 1)),
                        rating_min = runif(1000000, 2, 3.5), going = rep(NA, 1000000), 
                        waiting = rep(0, 1000000), sample_p = rep(0.5, 1000000), 
                        satisfaction = rep(NA, 1000000), satis_random = rep(NA, 1000000),
@@ -184,7 +184,7 @@ tourists <- tourists %>%
 tour_ops <- tour_ops %>%
   group_by(id) %>%
   mutate(rating = ifelse(bookings == 0, rating, 
-                         mean(c(colMeans(tourists[which(tourists$going == id), "satisfaction"], na.rm = T), rating), na.rm = T)),
+                         median(c(colMeans(tourists[which(tourists$going == id), "satisfaction"], na.rm = T), rating), na.rm = T)),
          bookings = 0,
          time_with = 0,
          profit = 0) %>%
