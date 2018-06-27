@@ -1,7 +1,7 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-06-13
+# Date modified: 2018-06-27
 
 library(dplyr)
 
@@ -544,17 +544,17 @@ invest_services <- function(slope = 20, rating, max_rating, profit, infl = 0.75)
 # (profit - subsistence) and the maximum number of extra tourists that the operator can afford.
 # The price per extra tourist is given by the equivalent of 2 weeks of work at full capacity.
 
-invest_infrastructure <- function(slope = 30, profit, max_profit, capacity, ticket,infl = 0.85){
+invest_infrastructure <- function(slope = 30, profit, max_profit, capacity, ticket,infl = 0.7){
   p_infrastructure <- 1 / (1 + exp(-slope * ((profit/max_profit) - infl)))
   ifelse(rbinom(length(p_infrastructure), 1, p_infrastructure) == 1, 
          as.integer((profit - 35000) / (capacity * ticket * 14)) * (capacity * ticket * 14), 0)
 }
 
 # testing
-
-# profits <- seq(0, 100000, 1000)
+# 
+# profits <- seq(0, 10000, 1000)
 # max_p <- 100000
-# p_infrastructure <- invest_infrastructure(slope = 30, profit = profits, max_profit = max_p, infl = 0.85)
+# p_infrastructure <- invest_infrastructure(slope = 25, profit = profits, max_profit = max_p, capacity = 20, ticket = 25, infl = 0.7)
 # prop_profit <- profits/max_p
 # plot(p_infrastructure ~ prop_profit)
 
