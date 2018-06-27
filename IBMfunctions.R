@@ -520,7 +520,7 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
 # The amount invested is a random proportion between 1 and 100 % of the available money
 # which is the profits for that year minus a subsistence amount (set to 35000).
 
-invest_services <- function(slope = 25, rating, max_rating, profit, infl = 0.75){
+invest_services <- function(slope = 20, rating, max_rating, profit, infl = 0.75){
   p_services <- 1 / (1 + exp(slope * ((rating/max_rating) - infl)))               
   ifelse(rbinom(length(p_services), 1, p_services) == 1 & profit - 35000 > 0, runif(1, 0.1, 1) * (profit - 35000), 0.001)
 }
