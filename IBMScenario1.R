@@ -9,9 +9,8 @@ source("IBMfunctions.R")
 # initialise population of tourists and tour operators ####
 set.seed(123)
 
-# years months and days
-years <- 3
-# months <- 12
+# years and days
+years <- 100
 days <- 365
 
 # fine
@@ -31,7 +30,7 @@ p_envious <- 0.3
 p_undefined <- 0.12
 
 
-tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 30, 1), rating = rep(2.5, 10),
+tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 30, 1), rating = rep(3, 10),
                       capacity = as.integer(runif(10, 10, 30)), bookings = rep(0, 10), bookings_year =  rep(0, 10),
                       investment_infra = rep(0.001, 10), investment_ot = rep(0.001, 10), 
                       time_with = rep(0, 10), time_with_year = rep(0, 10), 
@@ -43,7 +42,7 @@ tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 30, 1), rating = re
 capacity_0 <- sum(tour_ops$capacity)
 
 # generate daily time series of tourists
-tourists_start_mean <- 100
+tourists_start_mean <- 200
 days_tot <- years* days  # number of days in total
 
 #effect sizes
@@ -64,7 +63,9 @@ days_all <- 1:days_tot
 
 n_tourists <- round(rnorm(days_tot, 
                           mean = tourists_start_mean + y_effect *days_all - rnorm(days_tot, eff.season, season.sd) * cos(2 * pi/days*season), 
-                          sd =sampling.sd))
+                          sd =sampling.sd)) 
+
+n_tourists <- ifelse(n_tourists > 0, n_tourists, 0)
 
 
 # create dataframe to store history of behavioural strategies
@@ -78,14 +79,10 @@ effects <- rep(NA, years)
 encounter_probs <- rep(NA, years)
 encounter_probs[1] <- 0.5
 
-# time_allowed <- rep(NA, years)
-# 
 # tourists_allowed <- rep(NA, years)
 
 max_times <- rep(NA, years)
 max_times[1] <- 100000
-
-wide <- 0.00025 / (max_times[1] / 100000)
 
 
 profits <- vector("list", years)
@@ -95,11 +92,13 @@ ratings_year <- vector("list", years)
 prices <- vector("list", years)
 withanimals <- vector("list", years)
 
+init <- Sys.time()
+
 for(y in 1:years){                                  # start year loop
   
 # create year tourists population
-tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(60000, 30, 1), rnorm(30000, 45, 1), rnorm(10000, 60, 1)),
-                       rating_min = runif(1000000, 2, 3.5), going = rep(NA, 1000000), 
+tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(60000, 30, 1.5), rnorm(30000, 45, 3.5), rnorm(10000, 60, 3.5)),
+                       rating_min = runif(1000000, 2, 3), going = rep(NA, 1000000), 
                        waiting = rep(0, 1000000), sample_p = rep(0.5, 1000000), 
                        satisfaction = rep(NA, 1000000), satis_random = rep(NA, 1000000),
                        satis_animals = rep(NA, 1000000), satis_price = rep(NA, 1000000), 
@@ -137,7 +136,11 @@ tour_ops <- bookings[[2]]
 
 # avoid tour operators' profits being negative
 # if booking * price - costs < 0 then tour operator does not run tour
-tour_ops$bookings <- ifelse(((tour_ops$bookings * tour_ops$price) - (0.7 * 90)) < 0, 0, tour_ops$bookings)
+tour_ops$bookings <- ifelse(((tour_ops$bookings * tour_ops$price) - (1.5 * 90)) < 0, 0, tour_ops$bookings)
+
+tourists[which(tourists$going %in% which(tour_ops$bookings == 0)), "going"] <-  NA   
+
+tourists[which(tourists$going %in% which(tour_ops$bookings == 0)), "waiting"] <- tourists[which(tourists$going %in% which(tour_ops$bookings == 0)), "waiting"] + 1
 
 # add daily bookings to year bookings
 
@@ -145,14 +148,14 @@ tour_ops$bookings_year <- tour_ops$bookings_year + tour_ops$bookings
 
 # calculate time spent with animals
 tour_ops$time_with <- ifelse(tour_ops$bookings == 0, 0, 
-                             encounter_time(n_ops = length(which(tour_ops$bookings != 0)), p_e = encounter_probs[1]))
+                             encounter_time(n_ops = length(which(tour_ops$bookings != 0)), p_e = encounter_probs[y]))
   
   
 # tour operators calculate time spent with animals and profits
 tour_ops <- tour_ops %>%
   mutate(time_with_year = time_with_year + time_with,
     profit = case_when(bookings == 0 ~ 0, 
-                       TRUE ~ (bookings * price) - (0.7 * 90)),
+                       TRUE ~ (bookings * price) - (1.5 * 90)),
     profit_year = profit_year + profit)
 
 # tourists calculate satisfaction
@@ -162,7 +165,7 @@ tourists <- tourists %>%
                                 satisfaction_animals(tour_ops[which(tour_ops$id == unique(going)), "time_with"], 90, 15)),
          satis_price = ifelse(is.na(going), as.integer(NA), 
                               satisfaction_price(tour_ops[which(tour_ops$id == unique(going)), "price"], max(tour_ops$price),
-                                                 tour_ops[which(tour_ops$id == unique(going)), "rating"], max(tour_ops$rating), 15, 0.7)),
+                                                 tour_ops[which(tour_ops$id == unique(going)), "rating"], max(tour_ops$rating), 15, 1.5)),
          satis_wait = ifelse(is.na(going), as.integer(NA), satisfaction_waiting(waiting, -60,0.1)),
          satis_invest = ifelse(is.na(going), as.integer(NA),
                               satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot"],
@@ -248,7 +251,7 @@ if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(prof
 # tour operators update prices according to costs
 
 tour_ops <- tour_ops %>%
-  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (0.7 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
+  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
                            TRUE ~ price))
 
 
@@ -266,12 +269,16 @@ if(new_tour_ops == 1) {tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
                       behaviour = character(1), tours = 365, stringsAsFactors = FALSE))}
 
-# set profits and time with animals back to 0
+# set profits bookings and time with animals back to 0
 tour_ops$profit_year <- 0
 tour_ops$time_with_year <- 0
+tour_ops$bookings_year <- 0
 
 # keep track of simulation
 print(y)
 }
 
 
+End <- Sys.time()
+
+howlong <- End - init
