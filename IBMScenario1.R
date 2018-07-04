@@ -1,9 +1,8 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 2018-06-25
+# Date modified: 2018-07-04
 
-library(dplyr)
 source("IBMfunctions.R")
 
 # initialise population of tourists and tour operators ####
@@ -16,6 +15,13 @@ days <- 365
 # fine
 #fine <- 1000
 
+# create dataframe of parameters
+params <- data.frame(trends = rep(c(0.005, 0, -0.005), each = 3), 
+                     min_rating_shape1 = rep(c(0.8, 3, 1.9), 3), 
+                     min_rating_shape2 = rep(c(3, 0.8, 1.9), 3))
+
+
+for(i in 1:9){
 # create vector of behavioural phenotypes for tour operators
 
 phenotypes <- c("trustful", "optimist", "pessimist", "envious", "undefined")
@@ -46,7 +52,7 @@ tourists_start_mean <- 200
 days_tot <- years* days  # number of days in total
 
 #effect sizes
-y_effect <- 0.005          # trends in demand
+y_effect <- params[i, "trends"]          # trends in demand
 eff.season <- 50        # seasonal fluctuation
 season.sd <- 15
 # sampling noise
@@ -98,7 +104,7 @@ for(y in 1:years){                                  # start year loop
   
 # create year tourists population
 tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(60000, 30, 1.5), rnorm(30000, 45, 3.5), rnorm(10000, 60, 3.5)),
-                       rating_min = runif(1000000, 2, 3), going = rep(NA, 1000000), 
+                       rating_min = rbeta(1000000, params[i, "min_rating_shape1"], params[i, "min_rating_shape2"]) * 5, going = rep(NA, 1000000), 
                        waiting = rep(0, 1000000), sample_p = rep(0.5, 1000000), 
                        satisfaction = rep(NA, 1000000), satis_random = rep(NA, 1000000),
                        satis_animals = rep(NA, 1000000), satis_price = rep(NA, 1000000), 
@@ -126,7 +132,9 @@ day_of_sim <- d + (y - 1) * 365
 
 tourists <- tourists_pop[sample(nrow(tourists_pop), n_tourists[day_of_sim], replace = FALSE, prob = tourists_pop$sample_p), ]
 
-
+if(nrow(tourists) == 0){
+  next
+  }
 
 bookings <- booking(tourists, as.data.frame(tour_ops))
 
@@ -277,7 +285,11 @@ tour_ops$bookings_year <- 0
 # keep track of simulation
 print(y)
 }
-
+saveRDS(list(effect = effects, e_probs = encounter_probs, time_max = max_times, 
+             income = profits, invest = investments, bookings = bookings_year, 
+             ratings = ratings_year, tickets = prices, time_with = withanimals), 
+        file = paste("Scenario_1", i, sep = "_"))
+}
 
 End <- Sys.time()
 
