@@ -563,5 +563,5 @@ invest_infrastructure <- function(slope = 30, profit, max_profit, capacity, tick
 
 # fine defectors
 
-fines <- function(p, detection, penalty){
-  rbinom(1, p_detection) * penalty}
+fines <- function(p_detection, penalty){
+  rbinom(1, 1, p_detection) * penalty}
