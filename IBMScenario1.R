@@ -1,16 +1,15 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 2018-07-04
+# Date modified: 2018-07-06
 
-source("IBMfunctions.R")
+library(doParallel)
+library(foreach)
+
 
 # initialise population of tourists and tour operators ####
 set.seed(123)
 
-# years and days
-years <- 100
-days <- 365
 
 # fine
 #fine <- 1000
@@ -20,8 +19,20 @@ params <- data.frame(trends = rep(c(0.005, 0, -0.005), each = 3),
                      min_rating_shape1 = rep(c(0.8, 3, 1.9), 3), 
                      min_rating_shape2 = rep(c(3, 0.8, 1.9), 3))
 
+cl <- makeCluster(9)
 
-for(i in 1:9){
+registerDoParallel(cl)
+
+results <- foreach(i = 1:9, .packages = c("dplyr", "RGeode")) %dopar% {
+  
+#init <- Sys.time()
+  
+source("IBMfunctions.R")
+
+  # years and days
+years <- 100
+days <- 365
+  
 # create vector of behavioural phenotypes for tour operators
 
 phenotypes <- c("trustful", "optimist", "pessimist", "envious", "undefined")
@@ -98,7 +109,6 @@ ratings_year <- vector("list", years)
 prices <- vector("list", years)
 withanimals <- vector("list", years)
 
-init <- Sys.time()
 
 for(y in 1:years){                                  # start year loop
   
@@ -283,14 +293,15 @@ tour_ops$time_with_year <- 0
 tour_ops$bookings_year <- 0
 
 # keep track of simulation
-print(y)
+#print(y)
 }
-saveRDS(list(effect = effects, e_probs = encounter_probs, time_max = max_times, 
-             income = profits, invest = investments, bookings = bookings_year, 
-             ratings = ratings_year, tickets = prices, time_with = withanimals), 
-        file = paste("Scenario_1", i, sep = "_"))
+list(effect = effects, e_probs = encounter_probs, time_max = max_times, 
+     income = profits, invest = investments, bookings = bookings_year, 
+     ratings = ratings_year, tickets = prices, time_with = withanimals)
 }
 
-End <- Sys.time()
+stopCluster(cl)
 
-howlong <- End - init
+# End <- Sys.time()
+# 
+# howlong <- End - init
