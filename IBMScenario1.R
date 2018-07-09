@@ -165,8 +165,8 @@ tourists[which(tourists$going %in% which(tour_ops$bookings == 0)), "waiting"] <-
 tour_ops$bookings_year <- tour_ops$bookings_year + tour_ops$bookings
 
 # calculate time spent with animals
-tour_ops$time_with <- ifelse(tour_ops$bookings == 0, 0, 
-                             encounter_time(n_ops = length(which(tour_ops$bookings != 0)), p_e = encounter_probs[y]))
+tour_ops <- tour_ops %>%
+  mutate(time_with = ifelse(bookings > 0, encounter_time(n_ops = length(tour_ops$id), p_e = encounter_probs[y]), 0))
   
   
 # tour operators calculate time spent with animals and profits
