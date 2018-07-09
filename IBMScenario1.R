@@ -280,7 +280,7 @@ p_to <- sum(tour_ops$bookings_year, na.rm = T) / (sum(tour_ops$capacity) * 365)
 new_tour_ops <- rbinom(1, 1, p = ifelse(p_to > 1, 1, p_to))
 
 # if binomial draw is one, one new TO starts in the next year
-if(new_tour_ops == 1) {tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$id) + 1, price = runif(1, 15, 25), rating = runif(1, 3, 5),
+if(new_tour_ops == 1) {tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$id) + 1, price = rnorm(1, mean(tour_ops$price), 1), rating = 2.5,
                       capacity = as.integer(runif(1, 10, 30)), bookings = 0, bookings_year =  0, investment_infra = 0.001, 
                       investment_ot = 0.001,time_with = 0, 
                       time_with_year = 0, profit = 0, profit_year = 0,  phenotype = sample(phenotypes, 1, replace=TRUE, 
