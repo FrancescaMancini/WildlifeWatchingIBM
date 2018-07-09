@@ -471,6 +471,7 @@ DD.3 <- function(ticket, capacity, t_encounter, timeout, slope) {
 behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_DD){
   tour_ops %>% 
     mutate(., behaviour = with(., case_when(
+      time_with < max_times[y] / 365 / 10 ~ "no choice",
       phenotype == "trustful" ~ "cooperate",
       phenotype == "optimist" & payoff_DC < payoff_CC ~ "cooperate",
       phenotype == "pessimist" & payoff_CD > payoff_DD ~ "cooperate",
