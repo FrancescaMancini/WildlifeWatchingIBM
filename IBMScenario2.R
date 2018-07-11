@@ -169,7 +169,7 @@ tour_ops <- tour_ops %>%
 tour_ops  <- behaviour_choice(tour_ops = tour_ops, payoff_CC = CC(tour_ops$price, tour_ops$capacity, max_times[y], 90, 15, length(tour_ops$id)),
                       payoff_CD = CD(tour_ops$price, tour_ops$capacity, max_times[y], tour_ops$time_with, 90, 15, length(tour_ops$id)),
                       payoff_DC = DC(tour_ops$price, tour_ops$capacity, tour_ops$time_with, max_times[y], 90, 15, detection_prob, fine, length(tour_ops$id)),
-                      payoff_DD = DD(tour_ops$price, tour_ops$capacity, tour_ops$time_with, 90, 15, detection_prob, fine))
+                      payoff_DD = DD(tour_ops$price, tour_ops$capacity, tour_ops$time_with, 90, 15, detection_prob, fine), max_times[y])
 
 # if tour operator cooperates time_with is the maximum allowed
 # if defects time_with is the time calculated above

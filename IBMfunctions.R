@@ -468,10 +468,10 @@ DD.3 <- function(ticket, capacity, t_encounter, timeout, slope) {
 # this function determines the behavioural choice for each tour operators
 # according to the payoffs just calculated and their behavioural phenotype
 
-behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_DD){
+behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_DD, max_times){
   tour_ops %>% 
     mutate(., behaviour = with(., case_when(
-      time_with < max_times[y] / 365 / 10 ~ "no choice",
+      time_with < max_times / 365 / 10 ~ "no choice",
       phenotype == "trustful" ~ "cooperate",
       phenotype == "optimist" & payoff_DC < payoff_CC ~ "cooperate",
       phenotype == "pessimist" & payoff_CD > payoff_DD ~ "cooperate",
