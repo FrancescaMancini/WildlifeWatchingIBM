@@ -183,7 +183,7 @@ tourists <- tourists %>%
                                 satisfaction_animals(tour_ops[which(tour_ops$id == unique(going)), "time_with"], 90, 15)),
          satis_price = ifelse(is.na(going), as.integer(NA), 
                               satisfaction_price(tour_ops[which(tour_ops$id == unique(going)), "price"], max(tour_ops$price),
-                                                 tour_ops[which(tour_ops$id == unique(going)), "rating"], max(tour_ops$rating), 15, 1.5)),
+                                                 tour_ops[which(tour_ops$id == unique(going)), "rating"], max(tour_ops$rating), 15, 0.7)),
          satis_wait = ifelse(is.na(going), as.integer(NA), satisfaction_waiting(waiting, -60,0.1)),
          satis_invest = ifelse(is.na(going), as.integer(NA),
                               satisfaction_other_investment(tour_ops[which(tour_ops$id == unique(going)), "investment_ot"],
