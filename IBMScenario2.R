@@ -26,7 +26,7 @@ results <- foreach(i = 1:9, .packages = c("dplyr", "RGeode")) %dopar% {
 source("IBMfunctions.R")
   
 # years and days
-years <- 10
+years <- 100
 days <- 365
 
 # fine
@@ -57,6 +57,8 @@ tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 30, 1), rating = re
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
                       behaviour = character(10), tours = rep(365, 10), stringsAsFactors = FALSE)
 
+tour_ops$behaviour <- factor(tour_ops$behaviour, levels = c("defect", "cooperate", "no choice"))
+
 capacity_0 <- sum(tour_ops$capacity)
 
 # generate daily time series of tourists
@@ -64,7 +66,7 @@ tourists_start_mean <- 200
 days_tot <- years* days  # number of days in total
 
 #effect sizes
-y_effect <- 0.005          # trends in demand
+y_effect <- params[i, "trends"]           # trends in demand
 eff.season <- 50        # seasonal fluctuation
 season.sd <- 15
 # sampling noise
@@ -151,7 +153,7 @@ tour_ops <- bookings[[2]]
 
 # avoid tour operators' profits being negative
 # if booking * price - costs < 0 then tour operator does not run tour
-tour_ops$bookings <- ifelse(((tour_ops$bookings * tour_ops$price) - (0.7 * 90)) < 0, 0, tour_ops$bookings)
+tour_ops$bookings <- ifelse(((tour_ops$bookings * tour_ops$price) - (1.5 * 90)) < 0, 0, tour_ops$bookings)
 
 tourists[which(tourists$going %in% which(tour_ops$bookings == 0)), c("going", "waiting")] <-  c(NA, +1)
 
@@ -171,6 +173,8 @@ tour_ops  <- behaviour_choice(tour_ops = tour_ops, payoff_CC = CC(tour_ops$price
                       payoff_DC = DC(tour_ops$price, tour_ops$capacity, tour_ops$time_with, max_times[y], 90, 15, detection_prob, fine, length(tour_ops$id)),
                       payoff_DD = DD(tour_ops$price, tour_ops$capacity, tour_ops$time_with, 90, 15, detection_prob, fine), max_times[y])
 
+tour_ops$behaviour <- factor(tour_ops$behaviour, levels = c("defect", "cooperate", "no choice"))
+
 # if tour operator cooperates time_with is the maximum allowed
 # if defects time_with is the time calculated above
 tour_ops <- tour_ops %>%
@@ -183,7 +187,7 @@ tour_ops <- tour_ops %>%
 tour_ops <- tour_ops %>%
   mutate(time_with_year = time_with_year + time_with,
     profit = case_when(bookings == 0 ~ 0, 
-                       TRUE ~ (bookings * price) - (0.7 * 90)),
+                       TRUE ~ (bookings * price) - (.5 * 90)),
     profit_year = profit_year + profit)
 
 # tourists calculate satisfaction
@@ -249,11 +253,13 @@ behaviours_year[[y]] <- data.frame(id = tour_ops$id, year=rep(y,length(tour_ops$
 
 # identify defectors
 tour_ops_defect <- data.frame(id = behaviours_year[[y]][which(behaviours_year[[y]]$defect > 0), "id"])
+
 # fine
+if(dim(tour_ops_defect)[1] != 0){
 tour_ops_defect$fine <- replicate(length(tour_ops_defect$id), {fines(detection_prob, fine)})
 
 tour_ops[which(tour_ops$id %in% tour_ops_defect$id), "profit_year"] <- tour_ops[which(tour_ops$id %in% tour_ops_defect$id), "profit_year"] - tour_ops_defect$fine
-
+}
 
 # calculate tourism effect in the past year
 wide_time <- 0.00025/(max_times[y]/100000)
@@ -298,7 +304,7 @@ if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(prof
 # tour operators update prices according to costs
 
 tour_ops <- tour_ops %>%
-  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (0.7 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
+  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
                            TRUE ~ price))
 
 
