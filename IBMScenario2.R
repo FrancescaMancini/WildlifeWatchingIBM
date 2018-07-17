@@ -85,6 +85,8 @@ n_tourists <- round(rnorm(days_tot,
                           mean = tourists_start_mean + y_effect *days_all - rnorm(days_tot, eff.season, season.sd) * cos(2 * pi/days*season), 
                           sd =sampling.sd))
 
+n_tourists <- ifelse(n_tourists > 0, n_tourists, 0)
+
 
 # create vectors to store wildlife and management parameters
 
