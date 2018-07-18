@@ -1,7 +1,7 @@
 # IBM scenario 3: User group management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-07-10
+# Date modified: 2018-07-18
 
 # Scenario 3 is the user group management strategy.
 # Tour operators have proporty rights over the widlife 
@@ -198,7 +198,7 @@ tour_ops <- tour_ops %>%
 tour_ops <- tour_ops %>%
   mutate(time_with_year = time_with_year + time_with,
     profit = case_when(bookings == 0 ~ 0, 
-                       TRUE ~ (bookings * price) - (2.5 * 90)))
+                       TRUE ~ (bookings * price) - (1.5 * 90)))
     
 
 # Tradable wildlife allowance
@@ -340,7 +340,7 @@ if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(prof
 # tour operators update prices according to costs
 
 tour_ops <- tour_ops %>%
-  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (2.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
+  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
                            TRUE ~ price))
 
 
