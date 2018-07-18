@@ -1,4 +1,4 @@
-# IBM scenario 4: Licensing ####
+# IBM scenario 4: Co-management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
 # Date modified: 2018-07-18
