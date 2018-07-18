@@ -449,19 +449,19 @@ DD <- function(ticket, capacity, t_encounter, timeout, slope, p_detection, fine)
 # calculation of payoffs for management scenario 3 is similar
 # but it does not include fines
 
-# CC.3 <- function(ticket, capacity, maxx, timeout, slope, n_tourops) {
-#   ticket * sum(rbinom(capacity, 1, satisfaction_animals(maxx/365/n_tourops, timeout, slope)))}
-# 
-# DC.3 <- function(ticket, capacity, t_encounter, maxx, timeout, slope, n_tourops) {
-#   ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope)) + 
-#     competitive_adv(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops)}
-# 
-# CD.3 <- function(ticket, capacity, t_encounter, maxx, timeout, slope, n_tourops) {
-#   ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = maxx/365/n_tourops, timeout, slope)) - 
-#     competitive_adv(ticket, capacity, maxx, t_encounter, timeout, slope, n_tourops)}
-# 
-# DD.3 <- function(ticket, capacity, t_encounter, timeout, slope) {
-#   ticket * rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))} 
+CC.3 <- function(ticket, capacity, allowed, timeout, slope, n_tourops) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(allowed, timeout, slope)))}
+
+DC.3 <- function(ticket, capacity, t_encounter, allowed, timeout, slope, n_tourops) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope))) +
+    competitive_adv(ticket, capacity, allowed, t_encounter, timeout, slope, n_tourops)}
+
+CD.3 <- function(ticket, capacity, allowed, t_encounter, timeout, slope, n_tourops) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(withanimals = allowed, timeout, slope))) -
+    competitive_adv(ticket, capacity, allowed, t_encounter, timeout, slope, n_tourops)}
+
+DD.3 <- function(ticket, capacity, t_encounter, timeout, slope) {
+  ticket * sum(rbinom(capacity, 1, satisfaction_animals(withanimals = t_encounter, timeout, slope)))}
 
 # behavioural strategy
 
