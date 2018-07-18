@@ -1,7 +1,16 @@
-# IBM scenario 2: Licensing ####
+# IBM scenario 3: User group management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
 # Date modified: 2018-07-10
+
+# Scenario 3 is the user group management strategy.
+# Tour operators have proporty rights over the widlife 
+# They conduct monitoring of the wildife but do not enforce fines
+# The tour operators have tradable wildlife allowances
+# A minute with the animals costs 2 units and at the end of the day
+# they can decide if they want to sell some of their unused
+# allowance or buy some more time
+
 
 library(doParallel)
 library(foreach)
@@ -28,10 +37,6 @@ source("IBMfunctionsS3.R")
 # years and days
 years <- 100
 days <- 365
-
-# fine
-fine <- 1000
-detection_prob <- 0.7
 
 # cost of time with animals per minute
 twa_cost <- 2
@@ -159,7 +164,7 @@ tour_ops <- bookings[[2]]
 
 # avoid tour operators' profits being negative
 # if booking * price - costs < 0 then tour operator does not run tour
-tour_ops$bookings <- ifelse(((tour_ops$bookings * tour_ops$price) - (2.5 * 90)) < 0, 0, tour_ops$bookings)
+tour_ops$bookings <- ifelse(((tour_ops$bookings * tour_ops$price) - (1.5 * 90)) < 0, 0, tour_ops$bookings)
 
 tourists[which(tourists$going %in% which(tour_ops$bookings == 0)), c("going", "waiting")] <-  c(NA, +1)
 
@@ -174,10 +179,11 @@ tour_ops <- tour_ops %>%
 # choose behavioural strategy (cooperate or defect).
 # If the time calculated above is more than what is allowed
 # the tour operator makes a choice according to costs and benefits
-tour_ops  <- behaviour_choice(tour_ops = tour_ops, payoff_CC = CC(tour_ops$price, tour_ops$capacity, tour_ops$t_allowed, 90, 15, length(tour_ops$id)),
-                      payoff_CD = CD(tour_ops$price, tour_ops$capacity, tour_ops$t_allowed, tour_ops$time_with, 90, 15, length(tour_ops$id)),
-                      payoff_DC = DC(tour_ops$price, tour_ops$capacity, tour_ops$time_with, tour_ops$t_allowed, 90, 15, detection_prob, fine, length(tour_ops$id)),
-                      payoff_DD = DD(tour_ops$price, tour_ops$capacity, tour_ops$time_with, 90, 15, detection_prob, fine), tour_ops$t_allowed)
+
+tour_ops  <- behaviour_choice(tour_ops = tour_ops, payoff_CC = CC.3(tour_ops$price, tour_ops$capacity, tour_ops$t_allowed, 90, 15, length(tour_ops$id)),
+                      payoff_CD = CD.3(tour_ops$price, tour_ops$capacity, tour_ops$t_allowed, tour_ops$time_with, 90, 15, length(tour_ops$id)),
+                      payoff_DC = DC.3(tour_ops$price, tour_ops$capacity, tour_ops$time_with, tour_ops$t_allowed, 90, 15, length(tour_ops$id)),
+                      payoff_DD = DD.3(tour_ops$price, tour_ops$capacity, tour_ops$time_with, 90, 15), tour_ops$t_allowed)
 
 tour_ops$behaviour <- factor(tour_ops$behaviour, levels = c("defect", "cooperate", "no choice"))
 
@@ -205,10 +211,7 @@ tour_ops <- tour_ops %>%
   mutate(TWA = case_when(time_with == 0 ~ as.character(NA),
                    time_with >= 0.8 * t_allowed ~ "buy",
                    time_with < t_allowed/3 ~ "sell",
-                   TRUE ~ as.character(NA))) #%>%
-  # mutate(TWA = case_when(TWA == "sell" && t_allowed - time_with > 0 ~ "sell",
-  #                  TWA == "buy" && time_with >= 0.8 * t_allowed && profit - ((sum(tour_ops[which(tour_ops$TWA == "sell"), "t_allowed"] - tour_ops[which(tour_ops$TWA == "sell"), "time_with"])/sum(tour_ops$TWA == "sell", na.rm = T)) * twa_cost) > 0 ~ "buy",
-  #                  TRUE ~ as.character(NA)))
+                   TRUE ~ as.character(NA))) 
 
 if("buy" %in% tour_ops$TWA == T && "sell" %in% tour_ops$TWA == T){
   allowances <- sum(tour_ops[which(tour_ops$TWA == "sell"), "t_allowed"] - tour_ops[which(tour_ops$TWA == "sell"), "time_with"])
@@ -293,17 +296,6 @@ behaviours_year[[y]] <- data.frame(id = tour_ops$id, year=rep(y,length(tour_ops$
                                    defect = aggregate(behaviour ~ id, data = do.call(rbind, behaviours), table)$behaviour[,"defect"],
                                    cooperate = aggregate(behaviour ~ id, data = do.call(rbind, behaviours), table)$behaviour[,"cooperate"])
 
-# fine defecting tour operators
-
-# identify defectors
-tour_ops_defect <- data.frame(id = behaviours_year[[y]][which(behaviours_year[[y]]$defect > 0), "id"])
-
-# fine
-if(dim(tour_ops_defect)[1] != 0){
-tour_ops_defect$fine <- replicate(length(tour_ops_defect$id), {fines(detection_prob, fine)})
-
-tour_ops[which(tour_ops$id %in% tour_ops_defect$id), "profit_year"] <- tour_ops[which(tour_ops$id %in% tour_ops_defect$id), "profit_year"] - tour_ops_defect$fine
-}
 
 # calculate tourism effect in the past year
 wide_time <- 0.00025/(max_times[y]/100000)
@@ -360,13 +352,10 @@ p_to <- sum(tour_ops$bookings_year, na.rm = T) / (sum(tour_ops$capacity) * 365)
 new_tour_ops <- rbinom(1, 1, p = ifelse(p_to > 1, 1, p_to))} 
 else{new_tour_ops <- 0}
 
-# if binomial draw is one and the time spent with the animals
-# in the past year is smaller than the maximum time allowed 
-# by an amount that is equal to how much a tour operator is allowed, 
+# if binomial draw is one 
 # and if all tour operators agree (multiple binomial draw with probabilities equal to 
-# the individual tour operator's demand/supply ratio)
-if(new_tour_ops == 1 && 
-   mean(max_times[(y-6):y]) - mean(unlist(lapply(withanimals[(y-6):y], function(x) sum(x)))) >= mean(unlist(lapply(withanimals[(y-6):y], function(x) sum(x)))) / dim(tour_ops)[1] &&
+# the individual tour operator's demand/supply ratio) a new operator starts
+if(new_tour_ops == 1 &&
    all(rbinom(dim(tour_ops)[1], 1, prob = tour_ops$bookings_year/(tour_ops$capacity * 365)) == 1)) {
   tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$id) + 1, price = rnorm(1, mean(tour_ops$price), 1), rating = 3,
                                          capacity = as.integer(runif(1, 10, 30)), bookings = 0, bookings_year =  0, investment_infra = 0.001, 
