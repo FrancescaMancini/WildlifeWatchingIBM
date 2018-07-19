@@ -1,7 +1,7 @@
 # IBM scenario 3: User group management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-07-18
+# Date modified: 2018-07-19
 
 # Scenario 3 is the user group management strategy.
 # Tour operators have proporty rights over the widlife 
@@ -82,7 +82,7 @@ tour_ops <- data.frame(id = seq(1, 10, 1), price = rnorm(10, 30, 1), rating = re
                       profit = rep(0, 10), profit_year = rep(0, 10),
                       phenotype = sample(phenotypes, 10, replace=TRUE, 
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
-                      behaviour = character(10), t_allowed = rep(max_times[1]/10/365, 10), 
+                      behaviour = character(10), t_allowed = rep(max_times[1]/10/days, 10), 
                       TWA = character(10), stringsAsFactors = FALSE)
 
 tour_ops$behaviour <- factor(tour_ops$behaviour, levels = c("defect", "cooperate", "no choice"))
@@ -147,7 +147,7 @@ behaviours <- vector("list", days)
 for(d in 1:days){
 
 
-day_of_sim <- d + (y - 1) * 365
+day_of_sim <- d + (y - 1) * days
 
 ### daily tourists here
 
@@ -222,10 +222,10 @@ if("buy" %in% tour_ops$TWA == T && "sell" %in% tour_ops$TWA == T){
                                TWA == "sell" ~ profit + ((t_allowed - time_with) * twa_cost),
                                TWA == "buy" ~ profit - ((allowances/sum(tour_ops$TWA == "buy", na.rm = T)) * twa_cost),
                                TRUE ~ profit),
-           t_allowed = case_when(is.na(TWA) ~ max_times[y]/10/365,
-                                 TWA == "sell" ~ max_times[y]/10/365 - (t_allowed - time_with),
-                                 TWA == "buy" ~ max_times[y]/10/365 + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
-                                 TRUE ~ max_times[y]/10/365)) %>%
+           t_allowed = case_when(is.na(TWA) ~ max_times[y]/10/days,
+                                 TWA == "sell" ~ max_times[y]/10/days - (t_allowed - time_with),
+                                 TWA == "buy" ~ max_times[y]/10/days + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
+                                 TRUE ~ max_times[y]/10/days)) %>%
     ungroup()
 }
 
@@ -310,7 +310,7 @@ effects[y] <- tourism_effect(slope_time = wide_time, slope_capacity = wide_capac
 
 tour_ops <- tour_ops %>%
   mutate(investment_ot = invest_services(rating = rating, max_rating = max(rating), profit = profit_year),
-         investment_infra = invest_infrastructure(profit = profit_year, max_profit = capacity * price * 365, capacity = capacity, ticket = price)) %>%
+         investment_infra = invest_infrastructure(profit = profit_year, max_profit = capacity * price * days, capacity = capacity, ticket = price)) %>%
   mutate(investment_infra = ifelse((profit_year - 35000) - (investment_infra + investment_ot) > 0, investment_infra, 0.001),
          capacity = ifelse(investment_infra > 0.001, capacity + as.integer((profit - 35000) / (capacity * price * 14)), capacity))
 
@@ -338,10 +338,13 @@ withanimals[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), 
 if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(profits[(y-3):y], subset, money == 0))$id) == 3)))
            tour_ops <- subset(tour_ops, !(id %in% bankrupt))}
 
+if(nrow(tour_ops) == 0){break}
+
+
 # tour operators update prices according to costs
 
 tour_ops <- tour_ops %>%
-  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
+  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * days) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *days),   
                            TRUE ~ price))
 
 
@@ -349,7 +352,7 @@ tour_ops <- tour_ops %>%
 # probability of new operators wanting to start given by demand / supply ratio
 # probability is used in a binomial draw
 if(y %in% seq(6, years, 6)) {
-p_to <- sum(tour_ops$bookings_year, na.rm = T) / (sum(tour_ops$capacity) * 365)
+p_to <- sum(tour_ops$bookings_year, na.rm = T) / (sum(tour_ops$capacity) * days)
 new_tour_ops <- rbinom(1, 1, p = ifelse(p_to > 1, 1, p_to))} 
 else{new_tour_ops <- 0}
 
@@ -357,13 +360,13 @@ else{new_tour_ops <- 0}
 # and if all tour operators agree (multiple binomial draw with probabilities equal to 
 # the individual tour operator's demand/supply ratio) a new operator starts
 if(new_tour_ops == 1 &&
-   all(rbinom(dim(tour_ops)[1], 1, prob = tour_ops$bookings_year/(tour_ops$capacity * 365)) == 1)) {
+   all(rbinom(dim(tour_ops)[1], 1, prob = tour_ops$bookings_year/(tour_ops$capacity * days)) == 1)) {
   tour_ops <- rbind(tour_ops, data.frame(id = max(tour_ops$id) + 1, price = rnorm(1, mean(tour_ops$price), 1), rating = 3,
                                          capacity = as.integer(runif(1, 10, 30)), bookings = 0, bookings_year =  0, investment_infra = 0.001, 
                                          investment_ot = 0.001,time_with = 0, 
                                          time_with_year = 0, profit = 0, profit_year = 0,  phenotype = sample(phenotypes, 1, replace=TRUE, 
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
-                                         behaviour = character(1), tours = 365, stringsAsFactors = FALSE))}
+                                         behaviour = character(1), tours = days, stringsAsFactors = FALSE))}
 
 # set profits bookings and time with animals back to 0
 tour_ops$profit_year <- 0

@@ -1,7 +1,7 @@
 # IBM scenario 2: Licensing ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-07-10
+# Date modified: 2018-07-19
 
 library(doParallel)
 library(foreach)
@@ -137,7 +137,7 @@ behaviours <- vector("list", days)
 for(d in 1:days){
 
 
-day_of_sim <- d + (y - 1) * 365
+day_of_sim <- d + (y - 1) * days
 
 ### daily tourists here
 
@@ -182,7 +182,7 @@ tour_ops$behaviour <- factor(tour_ops$behaviour, levels = c("defect", "cooperate
 tour_ops <- tour_ops %>%
   mutate(time_with = case_when(bookings == 0 ~ 0,
                                behaviour == "defect" | behaviour == "no choice" ~ time_with,
-                               behaviour == "cooperate" ~ max_times[y] / 365 / 10))
+                               behaviour == "cooperate" ~ max_times[y] / days / 10))
 
   
 # tour operators update time spent with animals in the year and profits
@@ -275,7 +275,7 @@ effects[y] <- tourism_effect(slope_time = wide_time, slope_capacity = wide_capac
 
 tour_ops <- tour_ops %>%
   mutate(investment_ot = invest_services(rating = rating, max_rating = max(rating), profit = profit_year),
-         investment_infra = invest_infrastructure(profit = profit_year, max_profit = capacity * price * 365, capacity = capacity, ticket = price)) %>%
+         investment_infra = invest_infrastructure(profit = profit_year, max_profit = capacity * price * days, capacity = capacity, ticket = price)) %>%
   mutate(investment_infra = ifelse((profit_year - 35000) - (investment_infra + investment_ot) > 0, investment_infra, 0.001),
          capacity = ifelse(investment_infra > 0.001, capacity + as.integer((profit - 35000) / (capacity * price * 14)), capacity))
 
@@ -303,10 +303,12 @@ withanimals[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), 
 if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(profits[(y-3):y], subset, money == 0))$id) == 3)))
            tour_ops <- subset(tour_ops, !(id %in% bankrupt))}
 
+if(nrow(tour_ops) == 0){break}
+
 # tour operators update prices according to costs
 
 tour_ops <- tour_ops %>%
-  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * 365) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *365),   
+  mutate(price = case_when(price_change(ticket = tour_ops$price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) * days) > (1.5 * 90) / tour_ops$capacity ~ price_change(ticket = price, demand = sum(tour_ops$bookings_year, na.rm = T), supply = sum(tour_ops$capacity) *days),   
                            TRUE ~ price))
 
 
@@ -314,7 +316,7 @@ tour_ops <- tour_ops %>%
 # probability of new operators wanting to start given by demand / supply ratio
 # probability is used in a binomial draw
 if(y %in% seq(6, years, 6)) {
-p_to <- sum(tour_ops$bookings_year, na.rm = T) / (sum(tour_ops$capacity) * 365)
+p_to <- sum(tour_ops$bookings_year, na.rm = T) / (sum(tour_ops$capacity) * days)
 new_tour_ops <- rbinom(1, 1, p = ifelse(p_to > 1, 1, p_to))} 
 else{new_tour_ops <- 0}
 
