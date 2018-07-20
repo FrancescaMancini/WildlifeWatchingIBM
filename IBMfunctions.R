@@ -1,7 +1,7 @@
 # Functions for wildlife watching IBM ####
 # Author: Francesca Mancini
 # Date created: 2018-05-15
-# Date modified: 2018-06-27
+# Date modified: 2018-07-20
 
 library(dplyr)
 
@@ -519,7 +519,7 @@ behaviour_choice <- function(tour_ops, payoff_CC, payoff_CD, payoff_DC, payoff_D
 # and it gets quickly smaller after reaching 3.75.
 # The decision to invest is then a binomial draw based on this probability.
 # The amount invested is a random proportion between 1 and 100 % of the available money
-# which is the profits for that year minus a subsistence amount (set to 35000).
+# which is the profits for that year.
 
 invest_services <- function(slope = 20, rating, max_rating, profit, infl = 0.75){
   p_services <- 1 / (1 + exp(slope * ((rating/max_rating) - infl)))               
@@ -542,13 +542,13 @@ invest_services <- function(slope = 20, rating, max_rating, profit, infl = 0.75)
 # and it gets quickly higher after reaching 85000.
 # The decision to invest is then a binomial draw based on this probability.
 # The amount invested is then given by the amount of money available 
-# (profit - subsistence) and the maximum number of extra tourists that the operator can afford.
+# and the maximum number of extra tourists that the operator can afford.
 # The price per extra tourist is given by the equivalent of 2 weeks of work at full capacity.
 
 invest_infrastructure <- function(slope = 30, profit, max_profit, capacity, ticket,infl = 0.7){
   p_infrastructure <- 1 / (1 + exp(-slope * ((profit/(max_profit/2)) - infl)))
   ifelse(rbinom(length(p_infrastructure), 1, p_infrastructure) == 1, 
-         as.integer(profit / (capacity * ticket * 14)) * (capacity * ticket * 14), 0)
+         as.integer(profit / (capacity * ticket * 14)) * (capacity * ticket * 14), 0.001)
 }
 
 # testing

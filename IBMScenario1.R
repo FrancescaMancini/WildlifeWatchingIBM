@@ -1,7 +1,7 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 2018-07-06
+# Date modified: 2018-07-20
 
 library(doParallel)
 library(foreach)
@@ -239,8 +239,8 @@ effects[y] <- tourism_effect(slope_time = wide_time, slope_capacity = wide_capac
 tour_ops <- tour_ops %>%
   mutate(investment_ot = invest_services(rating = rating, max_rating = max(rating), profit = profit_year),
          investment_infra = invest_infrastructure(profit = profit_year, max_profit = capacity * price * 365, capacity = capacity, ticket = price)) %>%
-  mutate(investment_infra = ifelse((profit_year - 35000) - (investment_infra + investment_ot) > 0, investment_infra, 0.001),
-         capacity = ifelse(investment_infra > 0.001, capacity + as.integer((profit - 35000) / (capacity * price * 14)), capacity))
+  mutate(investment_infra = ifelse(profit_year  - (investment_infra + investment_ot) > 0, investment_infra, 0.001),
+         capacity = ifelse(investment_infra > 0.001, capacity + as.integer(profit / (capacity * price * 14)), capacity))
 
 # store tour operators investments in a list
 investments[[y]] <- data.frame(id = tour_ops$id, year=rep(y,length(tour_ops$id)), 
