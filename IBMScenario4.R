@@ -123,7 +123,7 @@ n_tourists <- ifelse(n_tourists > 0, n_tourists, 0)
 for(y in 1:years){                                  # start year loop
   
 # create year tourists population
-tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(60000, 30, 1), rnorm(30000, 45, 1), rnorm(10000, 60, 1)),
+tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(600000, 30, 1.5), rnorm(300000, 45, 3.5), rnorm(100000, 60, 3.5)),
                        rating_min = rbeta(1000000, params[i, "min_rating_shape1"], params[i, "min_rating_shape2"]) * 5, going = rep(NA, 1000000),
                        waiting = rep(0, 1000000), sample_p = rep(0.5, 1000000), 
                        satisfaction = rep(NA, 1000000), satis_random = rep(NA, 1000000),
