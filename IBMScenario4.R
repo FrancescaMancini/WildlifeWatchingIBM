@@ -385,7 +385,8 @@ if(new_tour_ops == 1 &&
                                          investment_ot = 0.001,time_with = 0, 
                                          time_with_year = 0, profit = 0, profit_year = 0,  phenotype = sample(phenotypes, 1, replace=TRUE, 
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
-                                         behaviour = character(1), tours = days, stringsAsFactors = FALSE))}
+                                         behaviour = character(1), t_allowed = rep(max_times[1]/10/days, 10), 
+                                         TWA = character(10), stringsAsFactors = FALSE))}
 
 # set profits bookings and time with animals back to 0
 tour_ops$profit_year <- 0
