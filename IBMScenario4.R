@@ -228,10 +228,10 @@ if("buy" %in% tour_ops$TWA == T && "sell" %in% tour_ops$TWA == T){
                                TWA == "sell" ~ profit + ((t_allowed - time_with) * twa_cost),
                                TWA == "buy" ~ profit - ((allowances/sum(tour_ops$TWA == "buy", na.rm = T)) * twa_cost),
                                TRUE ~ profit),
-           t_allowed = case_when(is.na(TWA) ~ max_times[y]/10/days,
-                                 TWA == "sell" ~ max_times[y]/10/days - (t_allowed - time_with),
-                                 TWA == "buy" ~ max_times[y]/10/days + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
-                                 TRUE ~ max_times[y]/10/days)) %>%
+           t_allowed = case_when(is.na(TWA) ~ max_times[y]/nrow(tour_ops)/days,
+                                 TWA == "sell" ~ max_times[y]/nrow(tour_ops)/days - (t_allowed - time_with),
+                                 TWA == "buy" ~ max_times[y]/nrow(tour_ops)/days + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
+                                 TRUE ~ max_times[y]/nrow(tour_ops)/days)) %>%
     ungroup()
 }
 
@@ -385,8 +385,8 @@ if(new_tour_ops == 1 &&
                                          investment_ot = 0.001,time_with = 0, 
                                          time_with_year = 0, profit = 0, profit_year = 0,  phenotype = sample(phenotypes, 1, replace=TRUE, 
                                          prob=c(p_trustful, p_optimist, p_pessimist, p_envious, p_undefined)),
-                                         behaviour = character(1), t_allowed = rep(max_times[1]/10/days, 10), 
-                                         TWA = character(10), stringsAsFactors = FALSE))}
+                                         behaviour = character(1), t_allowed = max_times[y]/nrow(tour_ops)/days, 
+                                         TWA = character(1), stringsAsFactors = FALSE))}
 
 # set profits bookings and time with animals back to 0
 tour_ops$profit_year <- 0
