@@ -1,7 +1,7 @@
 # IBM scenario 3: User group management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-07-20
+# Date modified: 2018-07-24
 
 # Scenario 3 is the user group management strategy.
 # Tour operators have proporty rights over the widlife 
@@ -219,13 +219,13 @@ if("buy" %in% tour_ops$TWA == T && "sell" %in% tour_ops$TWA == T){
   tour_ops <- tour_ops %>%
     group_by(TWA) %>%
     mutate(profit = case_when(is.na(TWA) ~ profit,
-                               TWA == "sell" ~ profit + ((t_allowed - time_with) * twa_cost),
-                               TWA == "buy" ~ profit - ((allowances/sum(tour_ops$TWA == "buy", na.rm = T)) * twa_cost),
-                               TRUE ~ profit),
+        TWA == "sell" ~ profit + ((t_allowed - time_with) * twa_cost),
+        TWA == "buy" ~ profit - ((allowances/sum(tour_ops$TWA == "buy", na.rm = T)) * twa_cost),
+        TRUE ~ profit),
            t_allowed = case_when(is.na(TWA) ~ max_times[y]/nrow(tour_ops)/days,
-                                 TWA == "sell" ~ max_times[y]/nrow(tour_ops)/days - (t_allowed - time_with),
-                                 TWA == "buy" ~ max_times[y]/nrow(tour_ops)/days + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
-                                 TRUE ~ max_times[y]/nrow(tour_ops)/days)) %>%
+        TWA == "sell" ~ time_with,
+        TWA == "buy" ~ max_times[y]/nrow(tour_ops)/days + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
+        TRUE ~ max_times[y]/nrow(tour_ops)/days)) %>%
     ungroup()
 }
 
