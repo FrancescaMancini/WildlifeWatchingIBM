@@ -1,7 +1,7 @@
 # IBM scenario 3: User group management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-07-24
+# Date modified: 2018-07-25
 
 # Scenario 3 is the user group management strategy.
 # Tour operators have proporty rights over the widlife 
@@ -215,19 +215,20 @@ tour_ops <- tour_ops %>%
                    TRUE ~ as.character(NA))) 
 
 if("buy" %in% tour_ops$TWA == T && "sell" %in% tour_ops$TWA == T){
-  allowances <- sum(tour_ops[which(tour_ops$TWA == "sell"), "t_allowed"] - tour_ops[which(tour_ops$TWA == "sell"), "time_with"])
+  allowances <- sum(max_times[y]/nrow(tour_ops)/days * (tour_ops[which(tour_ops$TWA == "sell"), "time_with"] / tour_ops[which(tour_ops$TWA == "sell"), "t_allowed"]))
+  if(all(tour_ops[which(tour_ops$TWA == "buy"), "profit_year"] >= (allowances / sum(tour_ops$TWA == "buy", na.rm = T)) * twa_cost) == TRUE){
   tour_ops <- tour_ops %>%
     group_by(TWA) %>%
     mutate(profit = case_when(is.na(TWA) ~ profit,
-        TWA == "sell" ~ profit + ((t_allowed - time_with) * twa_cost),
+        TWA == "sell" ~ profit + ((max_times[y]/nrow(tour_ops)/days * (time_with/t_allowed)) * twa_cost),
         TWA == "buy" ~ profit - ((allowances/sum(tour_ops$TWA == "buy", na.rm = T)) * twa_cost),
         TRUE ~ profit),
            t_allowed = case_when(is.na(TWA) ~ max_times[y]/nrow(tour_ops)/days,
-        TWA == "sell" ~ time_with,
+        TWA == "sell" ~ max_times[y]/nrow(tour_ops)/days - (max_times[y]/nrow(tour_ops)/days * (time_with/t_allowed)),
         TWA == "buy" ~ max_times[y]/nrow(tour_ops)/days + (allowances/sum(tour_ops$TWA == "buy", na.rm = T)),
         TRUE ~ max_times[y]/nrow(tour_ops)/days)) %>%
     ungroup()
-}
+}}
 
 # update annual profits
 
@@ -335,7 +336,7 @@ prices[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), ticke
 withanimals[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), time = tour_ops$time_with_year)
 
 # operators who have had no profits for the past 3 years retire
-if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(profits[(y-3):y], subset, money == 0))$id) == 3)))
+if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(profits[(y-3):y], subset, money <= 0))$id) == 3)))
            tour_ops <- subset(tour_ops, !(id %in% bankrupt))}
 
 if(nrow(tour_ops) == 0){break}
