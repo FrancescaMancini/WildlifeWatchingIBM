@@ -1,7 +1,7 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 2018-07-20
+# Date modified: 2018-08-08
 
 library(doParallel)
 library(foreach)
@@ -15,22 +15,22 @@ set.seed(123)
 #fine <- 1000
 
 # create dataframe of parameters
-params <- data.frame(trends = rep(c(0.005, 0, -0.005), each = 3), 
-                     min_rating_shape1 = rep(c(0.8, 3, 1.9), 3), 
-                     min_rating_shape2 = rep(c(3, 0.8, 1.9), 3))
+params <- data.frame(trends = rep(c(0.005, 0, -0.005), each = 15), 
+                     min_rating_shape1 = rep(c(0.8, 3, 1.9), each = 5), 
+                     min_rating_shape2 = rep(c(3, 0.8, 1.9), each = 5))
 
-cl <- makeCluster(9)
+cl <- makeCluster(15)
 
 registerDoParallel(cl)
 
-results <- foreach(i = 1:9, .packages = c("dplyr", "RGeode")) %dopar% {
+results <- foreach(i = 1:45, .packages = c("dplyr", "RGeode")) %dopar% {
   
 #init <- Sys.time()
   
 source("IBMfunctions.R")
 
   # years and days
-years <- 100
+years <- 50
 days <- 365
   
 # create vector of behavioural phenotypes for tour operators
@@ -113,7 +113,7 @@ withanimals <- vector("list", years)
 for(y in 1:years){                                  # start year loop
   
 # create year tourists population
-tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(600000, 30, 1.5), rnorm(300000, 45, 3.5), rnorm(100000, 60, 3.5)),
+tourists_pop <- data.frame(id = seq(1, 1000000, 1), price_max = c(rnorm(60000, 30, 1.5), rnorm(30000, 45, 3.5), rnorm(10000, 60, 3.5)),
                        rating_min = rbeta(1000000, params[i, "min_rating_shape1"], params[i, "min_rating_shape2"]) * 5, going = rep(NA, 1000000), 
                        waiting = rep(0, 1000000), sample_p = rep(0.5, 1000000), 
                        satisfaction = rep(NA, 1000000), satis_random = rep(NA, 1000000),
@@ -305,3 +305,8 @@ stopCluster(cl)
 # End <- Sys.time()
 # 
 # howlong <- End - init
+
+
+saveRDS(results, "../SimResults/Scenario1.rds")
+
+

@@ -1,7 +1,7 @@
 # IBM scenario 4: Co-management ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-07-25
+# Date modified: 2018-08-08
 
 # Scenario 4 is the hybrid management strategy.
 # Tour operators have proporty rights over the widlife 
@@ -22,20 +22,20 @@ set.seed(123)
 
 
 # create dataframe of parameters
-params <- data.frame(trends = rep(c(0.005, 0, -0.005), each = 3), 
-                     min_rating_shape1 = rep(c(0.8, 3, 1.9), 3), 
-                     min_rating_shape2 = rep(c(3, 0.8, 1.9), 3))
+params <- data.frame(trends = rep(c(0.005, 0, -0.005), each = 15), 
+                     min_rating_shape1 = rep(c(0.8, 3, 1.9), each = 5), 
+                     min_rating_shape2 = rep(c(3, 0.8, 1.9), each = 5))
 
-cl <- makeCluster(9)
+cl <- makeCluster(15)
 
 registerDoParallel(cl)
 
-results <- foreach(i = 1:9, .packages = c("dplyr", "RGeode")) %dopar% {
+results <- foreach(i = 1:45, .packages = c("dplyr", "RGeode")) %dopar% {
 
 source("IBMfunctionsS3.R")
   
 # years and days
-years <- 100
+years <- 50
 days <- 365
 
 # fine
@@ -403,3 +403,7 @@ list(effect = effects, e_probs = encounter_probs, time_max = max_times,
 }
 
 stopCluster(cl)
+
+saveRDS(results, "../SimResults/Scenario4.rds")
+
+
