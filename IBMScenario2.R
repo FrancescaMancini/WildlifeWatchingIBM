@@ -1,7 +1,7 @@
 # IBM scenario 2: Licensing ####
 # Author: Francesca Mancini
 # Date created: 2018-06-25
-# Date modified: 2018-08-08
+# Date modified: 2018-08-14
 
 library(doParallel)
 library(foreach)
@@ -189,7 +189,7 @@ tour_ops <- tour_ops %>%
 tour_ops <- tour_ops %>%
   mutate(time_with_year = time_with_year + time_with,
     profit = case_when(bookings == 0 ~ 0, 
-                       TRUE ~ (bookings * price) - (.5 * 90)),
+                       TRUE ~ (bookings * price) - (1.5 * 90)),
     profit_year = profit_year + profit)
 
 # tourists calculate satisfaction
