@@ -1,7 +1,7 @@
 # IBM scenario 1: Code of Conduct ####
 # Author: Francesca Mancini
 # Date created: 2018-05-30
-# Date modified: 2018-08-14
+# Date modified: 2018-08-20
 
 library(doParallel)
 library(foreach)
@@ -265,6 +265,8 @@ withanimals[[y]] <- data.frame(id=tour_ops$id, year=rep(y,length(tour_ops$id)), 
 # operators who have had no profits for the past 3 years retire
 if(y > 2) {bankrupt <- as.numeric(names(which(table(do.call("rbind", lapply(profits[(y-3):y], subset, money == 0))$id) == 3)))
            tour_ops <- subset(tour_ops, !(id %in% bankrupt))}
+
+if(nrow(tour_ops) == 0){break}
 
 # tour operators update prices according to costs
 
