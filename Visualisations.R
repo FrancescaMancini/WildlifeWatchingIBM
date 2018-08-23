@@ -1,7 +1,7 @@
 # Visualisations ####
 # Author: Francesca Mancini
 # Date created: 2018-06-27
-# Date modified: 2018-08-14
+# Date modified: 2018-08-23
 
 library(ggplot2)
 library(plyr)
@@ -231,10 +231,10 @@ ggplot(aggregate(services ~ year + management + trends + tourists + iteration,
   geom_density_ridges_gradient(aes(fill = ..x..), scale = 3, size = 0.3) +
   scale_fill_viridis(name = "Service\ninvestment\n") +
   facet_wrap(~ management + trends, ncol = 3, nrow = 6) +
-  xlim(0, 25000) +
+  #xlim(0, 25000) +
   ylab("Type of tourists") +
   xlab("Service investment") +
-  scale_x_continuous(breaks = c(0, 10000, 20000), position = "bottom") +
+  #scale_x_continuous(breaks = c(0, 10000, 20000), position = "bottom") +
   theme_ridges() +
   theme(strip.text.x = element_text(size = 12))
 
@@ -292,7 +292,7 @@ ggplot(aggregate(money ~ year + management + trends + tourists + iteration,
   facet_wrap(~ management + trends, ncol = 3, nrow = 6) +
   ylab("Type of tourists") +
   xlab("Income") +
-  scale_x_continuous(breaks = c(0, 30000, 60000), position = "bottom") +
+  scale_x_continuous(breaks = c(0, 10000, 30000), position = "bottom") +
   theme_ridges() +
   theme(strip.text.x = element_text(size = 12))
 
@@ -410,18 +410,18 @@ encounter <- ggplot(data = all_sims_ecol, aes(x = year, y = p_encounter)) +
 
 encounter
 
-maximum_time <- ggplot(data = all_sims_ecol, aes(x = year, y = time_max)) +
- geom_point(aes(colour = tourists), alpha = 0.7) +
- geom_smooth(aes(x = year, y = time_max, colour = tourists, group = tourists)) +
- scale_color_manual(values = pal, name = "Type of tourists") +
- scale_x_continuous(name = "Year", breaks = c(40, 43, 46, 49), position = "bottom") +
- scale_y_continuous(name = "Maximum time", position = "left") +
- facet_wrap(~ trends + management) +
- theme(text=element_text(size=12),                           
-       panel.background = element_blank())
-
-maximum_time
-
+# maximum_time <- ggplot(data = all_sims_ecol, aes(x = year, y = time_max)) +
+#  geom_point(aes(colour = tourists), alpha = 0.7) +
+#  geom_smooth(aes(x = year, y = time_max, colour = tourists, group = tourists)) +
+#  scale_color_manual(values = pal, name = "Type of tourists") +
+#  scale_x_continuous(name = "Year", breaks = c(40, 43, 46, 49), position = "bottom") +
+#  scale_y_continuous(name = "Maximum time", position = "left") +
+#  facet_wrap(~ trends + management) +
+#  theme(text=element_text(size=12),                           
+#        panel.background = element_blank())
+# 
+# maximum_time
+# 
 
 # how many tour operators are still in business at the end of the 50 years?
 
@@ -468,7 +468,8 @@ bubble <- ggplot(data = all_sims_mean) +
                      shape = 16, alpha = 0.8) +
           scale_size(range = c(4,13), name = "Effect on\nwildlife\n") +
           scale_color_manual(values = new_pal, name = "Type of\ntourists\n") +
-          ylim(0,30) +
+          ylim(0,25) +
+          #xlim(-1000,17000) +
           xlab("Income") +
           ylab("N operators") +
           facet_wrap(~ management + trends, ncol = 3, nrow = 6)+
@@ -477,4 +478,4 @@ bubble <- ggplot(data = all_sims_mean) +
                 panel.background = element_blank()) +
           guides(color = guide_legend(override.aes = list(size=8)))
 
-
+bubble
