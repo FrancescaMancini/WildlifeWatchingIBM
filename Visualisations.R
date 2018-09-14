@@ -1,7 +1,7 @@
 # Visualisations ####
 # Author: Francesca Mancini
 # Date created: 2018-06-27
-# Date modified: 2018-08-23
+# Date modified: 2018-09-14
 
 library(ggplot2)
 library(plyr)
@@ -130,7 +130,7 @@ length_business <- count(all_sims_socioecon, c("id", "trends", "tourists", "mana
 
 ggplot(data = length_business) +
   geom_jitter(aes(x = tourists, y = freq), shape = 20, color = "black", size = 1) +
-  geom_boxplot(aes(x = tourists, y = freq, fill = tourists), outlier.shape = NA, alpha = 0.8) +
+  geom_violin(aes(x = tourists, y = freq, fill = tourists), alpha = 0.8, draw_quantiles = 0.5) +
   scale_fill_manual(values = pal, name = "Type of tourists") +
   ylab("Years in business") +
   xlab("Type of tourists") +
