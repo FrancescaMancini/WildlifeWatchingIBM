@@ -130,7 +130,8 @@ length_business <- count(all_sims_socioecon, c("id", "trends", "tourists", "mana
 
 ggplot(data = length_business) +
   geom_jitter(aes(x = tourists, y = freq), shape = 20, color = "black", size = 1) +
-  geom_violin(aes(x = tourists, y = freq, fill = tourists), alpha = 0.8, draw_quantiles = 0.5) +
+  geom_violin(aes(x = tourists, y = freq, fill = tourists), alpha = 0.8) +
+  stat_summary(aes(x = tourists, y = freq), fun.y="median", geom="point") +
   scale_fill_manual(values = pal, name = "Type of tourists") +
   ylab("Years in business") +
   xlab("Type of tourists") +
